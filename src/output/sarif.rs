@@ -164,6 +164,10 @@ fn get_sarif_rules() -> Vec<SarifRule> {
             "Slice index accessed without length assertion",
             "Instruction data or account data is indexed without checking the slice length",
             "security", "medium"),
+        sarif_rule("PS-013", "UncheckedCpiReturn",
+            "CPI return value not checked",
+            "Cross-program invocation return value is not verified for errors",
+            "security", "high"),
         sarif_rule("PS-014", "SysvarWithoutPubkeyCheck",
             "Sysvar account used without pubkey comparison",
             "Sysvar account is used without verifying its pubkey matches the known sysvar address",
@@ -249,7 +253,7 @@ mod tests {
     #[test]
     fn test_all_rules_present() {
         let sarif = to_sarif(&[]);
-        let rules = ["PS-001","PS-002","PS-003","PS-004","PS-005","PS-006","PS-007","PS-008","PS-009","PS-010","PS-011","PS-012","PS-014"];
+        let rules = ["PS-001","PS-002","PS-003","PS-004","PS-005","PS-006","PS-007","PS-008","PS-009","PS-010","PS-011","PS-012","PS-013","PS-014"];
         for rule in rules {
             assert!(sarif.contains(rule), "SARIF should contain {}", rule);
         }

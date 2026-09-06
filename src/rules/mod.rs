@@ -10,6 +10,7 @@ pub mod ps009;
 pub mod ps010;
 pub mod ps011;
 pub mod ps012;
+pub mod ps013;
 pub mod ps014;
 
 use serde::{Deserialize, Serialize};
@@ -64,6 +65,7 @@ pub fn get_all_rules() -> Vec<Box<dyn Rule>> {
         Box::new(ps010::Ps010),
         Box::new(ps011::Ps011),
         Box::new(ps012::Ps012),
+        Box::new(ps013::Ps013),
         Box::new(ps014::Ps014),
     ]
 }

@@ -49,6 +49,7 @@ impl Default for SentinelConfig {
                     "PS-010".to_string(),
                     "PS-011".to_string(),
                     "PS-012".to_string(),
+                    "PS-013".to_string(),
                     "PS-014".to_string(),
                 ],
                 disabled_rules: Vec::new(),

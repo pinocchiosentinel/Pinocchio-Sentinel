@@ -33,6 +33,7 @@ pub enum CheckType {
     DataLen,
     Discriminant,
     PdaBump,
+    CpiReturn,
     Custom(String),
 }
 
