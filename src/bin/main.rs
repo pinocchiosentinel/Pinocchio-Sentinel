@@ -124,8 +124,9 @@ fn main() -> anyhow::Result<()> {
         match parse_program(source_file, &config) {
             Ok(program) => {
                 if let Some(ref router) = program.router {
+                    let ep_type = program.entrypoint.as_ref().map(|e| &e.macro_type);
                     for handler in &router.handlers {
-                        let graph = build_access_graph(handler, &program.ast);
+                        let graph = build_access_graph(handler, &program.ast, ep_type);
                         let findings = run_all_rules(&graph);
                         all_findings.extend(findings);
                     }

@@ -1,4 +1,4 @@
-use crate::frontend::HandlerInfo;
+use crate::frontend::{HandlerInfo, EntrypointMacro};
 use syn::{File, Item, ItemFn, Expr, Stmt, ExprMethodCall, ExprBlock, Pat, Lit, ExprStruct};
 use syn::spanned::Spanned;
 
@@ -41,6 +41,7 @@ pub struct AccountAccessGraph {
     pub handler_name: String,
     pub accounts: Vec<AccountAccess>,
     pub access_order: Vec<usize>,
+    pub entrypoint_type: Option<EntrypointMacro>,
 }
 
 impl AccountAccessGraph {
@@ -49,6 +50,7 @@ impl AccountAccessGraph {
             handler_name: handler_name.to_string(),
             accounts: Vec::new(),
             access_order: Vec::new(),
+            entrypoint_type: None,
         }
     }
 
@@ -80,8 +82,9 @@ impl AccountAccessGraph {
     }
 }
 
-pub fn build_access_graph(handler: &HandlerInfo, ast: &File) -> AccountAccessGraph {
+pub fn build_access_graph(handler: &HandlerInfo, ast: &File, entrypoint_type: Option<&EntrypointMacro>) -> AccountAccessGraph {
     let mut graph = AccountAccessGraph::new(&handler.handler_name);
+    graph.entrypoint_type = entrypoint_type.cloned();
 
     // Find the handler function in the AST
     let handler_fn = find_function_by_name(ast, &handler.handler_name);
@@ -107,6 +110,7 @@ pub fn build_access_graph(handler: &HandlerInfo, ast: &File) -> AccountAccessGra
         account_indices: account_indices.clone(),
         checks: Vec::new(),
         line_number_start: 0,
+        variable_aliases: std::collections::HashMap::new(),
     };
 
     if let Some(handler_fn) = handler_fn {
@@ -184,6 +188,7 @@ struct CheckCollector {
     account_indices: Vec<usize>,
     checks: Vec<CollectedCheck>,
     line_number_start: u32,
+    variable_aliases: std::collections::HashMap<String, usize>,
 }
 
 fn collect_checks_from_block(block: &syn::Block, collector: &mut CheckCollector) {
@@ -193,8 +198,14 @@ fn collect_checks_from_block(block: &syn::Block, collector: &mut CheckCollector)
                 collect_checks_from_expr(expr, collector);
             }
             Stmt::Local(local) => {
-                // let accounts = ...; — may contain account slice
+                // Record variable aliases: let authority = &accounts[0]
                 if let Some(init) = &local.init {
+                    if let Pat::Ident(pat_ident) = &local.pat {
+                        let var_name = pat_ident.ident.to_string();
+                        if let Some(account_idx) = try_extract_account_index_from_expr(&init.expr) {
+                            collector.variable_aliases.insert(var_name, account_idx);
+                        }
+                    }
                     collect_checks_from_expr(&init.expr, collector);
                 }
             }
@@ -389,6 +400,26 @@ fn analyze_match_arm_pattern(pat: &Pat, collector: &mut CheckCollector) {
     }
 }
 
+fn try_extract_account_index_from_expr(expr: &Expr) -> Option<usize> {
+    match expr {
+        Expr::Index(index_expr) => {
+            if let Expr::Path(path) = &*index_expr.expr {
+                if path.path.segments.last().map(|s| s.ident == "accounts").unwrap_or(false) {
+                    if let Expr::Lit(lit) = &*index_expr.index {
+                        if let Lit::Int(int_lit) = &lit.lit {
+                            return int_lit.base10_parse::<usize>().ok();
+                        }
+                    }
+                }
+            }
+            None
+        }
+        Expr::Reference(ref_expr) => try_extract_account_index_from_expr(&ref_expr.expr),
+        Expr::Paren(paren) => try_extract_account_index_from_expr(&paren.expr),
+        _ => None,
+    }
+}
+
 fn resolve_account_index(expr: &Expr, collector: &mut CheckCollector) -> Option<usize> {
     match expr {
         Expr::Index(index_expr) => {
@@ -421,8 +452,11 @@ fn resolve_account_index(expr: &Expr, collector: &mut CheckCollector) -> Option<
             resolve_account_index(&method_call.receiver, collector)
         }
         Expr::Path(path) => {
-            // Variable name — check if it maps to an account
             let var_name = path.path.segments.last()?.ident.to_string();
+            // Check variable aliases first
+            if let Some(&idx) = collector.variable_aliases.get(&var_name) {
+                return Some(idx);
+            }
             // Heuristic: if variable is named like "account_0" or "acc_0"
             if var_name.starts_with("account_") || var_name.starts_with("acc_") {
                 let suffix = var_name.trim_start_matches("account_").trim_start_matches("acc_");
@@ -431,7 +465,9 @@ fn resolve_account_index(expr: &Expr, collector: &mut CheckCollector) -> Option<
                 None
             }
         }
+        Expr::Reference(ref_expr) => resolve_account_index(&ref_expr.expr, collector),
         Expr::Paren(paren) => resolve_account_index(&paren.expr, collector),
+        Expr::Try(try_expr) => resolve_account_index(&try_expr.expr, collector),
         _ => None,
     }
 }
