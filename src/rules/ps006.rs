@@ -45,7 +45,8 @@ impl Rule for Ps006 {
                         ),
                         account_index: Some(a.index),
                         line_number: a.line_number,
-                        evidence: None,
+                        handler: graph.handler_name.clone(),
+                    evidence: None,
                     });
                 }
             }

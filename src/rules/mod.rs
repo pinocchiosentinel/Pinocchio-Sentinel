@@ -21,6 +21,7 @@ pub struct Finding {
     pub severity: Severity,
     pub confidence: Confidence,
     pub message: String,
+    pub handler: String,
     pub account_index: Option<usize>,
     pub line_number: Option<u32>,
     pub evidence: Option<String>,

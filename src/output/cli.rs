@@ -30,6 +30,8 @@ pub fn to_cli(findings: &[Finding]) -> String {
             finding.message
         ));
         
+        output.push_str(&format!("   Handler: {}\n", finding.handler.dimmed()));
+        
         if let Some(line) = finding.line_number {
             output.push_str(&format!("   Line: {}\n", line.to_string()));
         }
@@ -84,6 +86,7 @@ mod tests {
             severity: Severity::HIGH,
             confidence: Confidence::High,
             message: "Test finding".to_string(),
+            handler: "test_handler".to_string(),
             account_index: Some(0),
             line_number: Some(10),
             evidence: None,

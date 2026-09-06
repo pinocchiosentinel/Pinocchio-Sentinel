@@ -38,7 +38,8 @@ impl Rule for Ps012 {
                         ),
                         account_index: Some(account.index),
                         line_number: account.line_number,
-                        evidence: None,
+                        handler: graph.handler_name.clone(),
+                    evidence: None,
                     });
                 }
             }

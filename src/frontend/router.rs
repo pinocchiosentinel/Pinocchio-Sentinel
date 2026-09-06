@@ -136,9 +136,16 @@ fn extract_handlers(match_expr: &ExprMatch, scheme: &DiscriminatorScheme) -> Res
         let handler_name = extract_handler_name(&arm.body);
         let account_indices = extract_account_indices_from_expr(&arm.body);
 
+        // For inline handlers, use the discriminator value as the handler name
+        let effective_name = if handler_name == "unknown_handler" || handler_name == "Ok" || handler_name == "Err" {
+            format!("arm_{}", format!("{:?}", disc_value))
+        } else {
+            handler_name
+        };
+
         handlers.push(HandlerInfo {
             discriminator_value: disc_value,
-            handler_name,
+            handler_name: effective_name,
             account_slice_indices: account_indices,
             body: Some((*arm.body).clone()),
         });
