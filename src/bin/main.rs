@@ -7,6 +7,7 @@ use pinocchio_sentinel::{
     format_findings, print_findings, print_summary, ScanResult,
 };
 use pinocchio_sentinel::rules;
+use pinocchio_sentinel::graph::{CallGraph, InterproceduralAnalyzer};
 
 #[derive(Debug, Clone, ValueEnum)]
 enum OutputFormat {
@@ -123,6 +124,9 @@ fn main() -> anyhow::Result<()> {
     let mut all_findings = Vec::new();
     let mut files_scanned = 0;
 
+    // Build call graph for interprocedural analysis
+    let mut call_graph = CallGraph::new();
+
     for source_file in &source_files {
         if cli.verbose {
             tracing::info!("Analyzing {}", source_file.display());
@@ -130,6 +134,9 @@ fn main() -> anyhow::Result<()> {
 
         match parse_program(source_file, &config) {
             Ok(program) => {
+                // Add functions to call graph
+                call_graph.analyze_file(&program.ast, Some(&source_file.to_string_lossy()));
+
                 if let Some(ref router) = program.router {
                     let ep_type = program.entrypoint.as_ref().map(|e| &e.macro_type);
                     for handler in &router.handlers {
@@ -143,6 +150,23 @@ fn main() -> anyhow::Result<()> {
             Err(e) => {
                 if cli.verbose {
                     tracing::warn!("Failed to parse {}: {}", source_file.display(), e);
+                }
+            }
+        }
+    }
+
+    // Run interprocedural analysis
+    let analyzer = InterproceduralAnalyzer { call_graph };
+    for source_file in &source_files {
+        if let Ok(program) = parse_program(source_file, &config) {
+            if let Some(ref router) = program.router {
+                let ep_type = program.entrypoint.as_ref().map(|e| &e.macro_type);
+                for handler in &router.handlers {
+                    let graph = build_access_graph(handler, &program.ast, ep_type);
+                    let inter_findings = analyzer.analyze_cross_function_findings(&graph);
+                    all_findings.extend(inter_findings);
+                    let caller_findings = analyzer.detect_missing_checks_from_callees(&graph);
+                    all_findings.extend(caller_findings);
                 }
             }
         }
