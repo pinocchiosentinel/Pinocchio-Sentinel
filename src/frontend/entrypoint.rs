@@ -2,8 +2,6 @@ use super::{EntrypointInfo, EntrypointMacro};
 use syn::spanned::Spanned;
 use syn::{File, Item, Macro};
 
-const ENTRYPOINT_MACROS: &[&str] = &["entrypoint", "lazy_program_entrypoint", "no_allocator"];
-
 pub fn find_entrypoint(ast: &File) -> Option<EntrypointInfo> {
     for item in &ast.items {
         match item {

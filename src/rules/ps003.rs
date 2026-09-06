@@ -49,7 +49,7 @@ impl Rule for Ps003 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccessType, AccountAccess, CheckInfo};
+    use crate::graph::{AccessType, AccountAccess};
 
     #[test]
     fn test_ps003_missing_discriminant_check() {

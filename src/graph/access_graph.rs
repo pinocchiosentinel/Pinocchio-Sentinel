@@ -116,7 +116,6 @@ pub fn build_access_graph(
 
     // Collect checks from either the named function or the inline handler body
     let mut collector = CheckCollector {
-        account_indices: account_indices.clone(),
         checks: Vec::new(),
         line_number_start: 0,
         variable_aliases: std::collections::HashMap::new(),
@@ -194,7 +193,6 @@ struct CollectedCheck {
 }
 
 struct CheckCollector {
-    account_indices: Vec<usize>,
     checks: Vec<CollectedCheck>,
     line_number_start: u32,
     variable_aliases: std::collections::HashMap<String, usize>,

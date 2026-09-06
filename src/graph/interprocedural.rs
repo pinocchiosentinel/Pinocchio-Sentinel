@@ -118,7 +118,7 @@ impl InterproceduralAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccessType, AccountAccess, CheckInfo, FunctionInfo};
+    use crate::graph::{AccessType, AccountAccess, FunctionInfo};
 
     #[test]
     fn test_empty_analyzer() {

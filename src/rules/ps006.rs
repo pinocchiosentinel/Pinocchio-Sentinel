@@ -63,7 +63,7 @@ impl Rule for Ps006 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, CheckInfo, CheckType};
+    use crate::graph::AccountAccess;
 
     #[test]
     fn test_ps006_alias_detected() {

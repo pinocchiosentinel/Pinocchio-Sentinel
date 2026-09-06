@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use syn::spanned::Spanned;
-use syn::{Expr, ExprCall, ExprMethodCall, File, Item, ItemFn, Stmt};
+use syn::{Expr, File, Item, ItemFn, Stmt};
 
 #[derive(Debug, Clone)]
 pub struct FunctionInfo {

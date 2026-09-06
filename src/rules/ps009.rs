@@ -57,7 +57,7 @@ impl Rule for Ps009 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, CheckInfo};
+    use crate::graph::AccountAccess;
 
     #[test]
     fn test_ps009_lamport_target() {
