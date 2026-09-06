@@ -1,0 +1,42 @@
+# Pinocchio Sentinel Configuration
+# See: https://github.com/pinocchio-sentinel/pinocchio-sentinel
+
+[analysis]
+# v0.1 is intra-procedural only
+intra_procedural_only = true
+max_scan_time_ms = 5000
+include_skeletons = true
+
+[output]
+format = "cli"
+verbose = false
+
+[rules]
+# Enabled rules at v0.1
+enabled_rules = [
+    "PS-001",
+    "PS-002",
+    "PS-003",
+    "PS-004",
+    "PS-005",
+    "PS-006",
+    "PS-007",
+    "PS-008",
+    "PS-009",
+    "PS-010",
+    "PS-011",
+    "PS-012",
+    "PS-014",
+]
+
+# Disabled rules (reserved for v0.2)
+disabled_rules = [
+    # PS-013 - PDA sharing (requires interprocedural analysis)
+]
+
+# Severity overrides for specific rules
+severity_overrides = {}
+
+# Paths or patterns to exclude from analysis
+allow_list = []
+# Example: allow_list = ["**/tests/**", "**/examples/**"]

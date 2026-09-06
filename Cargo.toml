@@ -1,0 +1,60 @@
+[package]
+name = "pinocchio-sentinel"
+version = "0.1.0"
+edition = "2021"
+description = "Static analysis for Solana programs written without Anchor"
+license = "Apache-2.0"
+repository = "https://github.com/pinocchio-sentinel/pinocchio-sentinel"
+readme = "README.md"
+keywords = ["solana", "security", "static-analysis", "pinocchio", "sarif"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "pinocchio-sentinel"
+path = "src/main.rs"
+
+[dependencies]
+# AST parsing
+syn = { version = "2.0", features = ["full", "visit", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = { version = "1.0", features = ["span-locations"] }
+
+# CLI
+clap = { version = "4.0", features = ["derive"] }
+colored = "2.0"
+
+# SARIF output
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# File system
+walkdir = "2.0"
+glob = "0.3"
+
+# Cargo workspace support
+cargo_metadata = "0.18"
+
+[dev-dependencies]
+tempfile = "3.0"
+assert_cmd = "2.0"
+predicates = "3.0"
+
+[features]
+default = ["cli"]
+cli = []
+mcp = []  # MCP server support (v0.2)
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
