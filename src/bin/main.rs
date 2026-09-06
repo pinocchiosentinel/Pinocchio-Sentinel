@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -7,6 +7,13 @@ use pinocchio_sentinel::{
     format_findings, print_findings, print_summary, ScanResult,
 };
 use pinocchio_sentinel::rules;
+
+#[derive(Debug, Clone, ValueEnum)]
+enum OutputFormat {
+    Cli,
+    Sarif,
+    Json,
+}
 
 #[derive(Parser)]
 #[command(name = "pinocchio-sentinel")]
@@ -18,8 +25,8 @@ struct Cli {
     path: PathBuf,
 
     /// Output format (cli, sarif, json)
-    #[arg(short, long, default_value = "cli")]
-    format: String,
+    #[arg(short, long, default_value = "cli", value_enum)]
+    format: OutputFormat,
 
     /// Output file path
     #[arg(short, long)]
@@ -150,30 +157,56 @@ fn main() -> anyhow::Result<()> {
         rules_applied: config.rules.enabled_rules.len(),
     };
 
-    if let Some(ref sarif_path) = cli.sarif {
-        let sarif_output = pinocchio_sentinel::output::sarif::to_sarif(&result.findings);
-        std::fs::write(sarif_path, sarif_output)?;
-        if cli.verbose {
-            tracing::info!("SARIF output written to {}", sarif_path.display());
+    match &cli.format {
+        OutputFormat::Sarif => {
+            let sarif_output = pinocchio_sentinel::output::sarif::to_sarif(&result.findings);
+            if let Some(ref path) = cli.output {
+                std::fs::write(path, sarif_output)?;
+                if cli.verbose {
+                    tracing::info!("SARIF output written to {}", path.display());
+                }
+            } else {
+                println!("{}", sarif_output);
+            }
         }
-    }
+        OutputFormat::Json => {
+            let json_output = pinocchio_sentinel::output::json::to_json(&result.findings);
+            if let Some(ref path) = cli.output {
+                std::fs::write(path, json_output)?;
+                if cli.verbose {
+                    tracing::info!("JSON output written to {}", path.display());
+                }
+            } else {
+                println!("{}", json_output);
+            }
+        }
+        OutputFormat::Cli => {
+            if let Some(ref sarif_path) = cli.sarif {
+                let sarif_output = pinocchio_sentinel::output::sarif::to_sarif(&result.findings);
+                std::fs::write(sarif_path, sarif_output)?;
+                if cli.verbose {
+                    tracing::info!("SARIF output written to {}", sarif_path.display());
+                }
+            }
 
-    if let Some(ref json_path) = cli.json {
-        let json_output = pinocchio_sentinel::output::json::to_json(&result.findings);
-        std::fs::write(json_path, json_output)?;
-        if cli.verbose {
-            tracing::info!("JSON output written to {}", json_path.display());
-        }
-    }
+            if let Some(ref json_path) = cli.json {
+                let json_output = pinocchio_sentinel::output::json::to_json(&result.findings);
+                std::fs::write(json_path, json_output)?;
+                if cli.verbose {
+                    tracing::info!("JSON output written to {}", json_path.display());
+                }
+            }
 
-    if let Some(ref output_path) = cli.output {
-        let output_text = format_findings(&result.findings, &cli.format);
-        std::fs::write(output_path, output_text)?;
-        if cli.verbose {
-            tracing::info!("Output written to {}", output_path.display());
+            if let Some(ref output_path) = cli.output {
+                let output_text = format_findings(&result.findings, "cli");
+                std::fs::write(output_path, output_text)?;
+                if cli.verbose {
+                    tracing::info!("Output written to {}", output_path.display());
+                }
+            } else {
+                print_findings(&result.findings);
+            }
         }
-    } else {
-        print_findings(&result.findings);
     }
 
     print_summary(&result.findings);
