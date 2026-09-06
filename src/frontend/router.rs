@@ -140,6 +140,7 @@ fn extract_handlers(match_expr: &ExprMatch, scheme: &DiscriminatorScheme) -> Res
             discriminator_value: disc_value,
             handler_name,
             account_slice_indices: account_indices,
+            body: Some((*arm.body).clone()),
         });
     }
 
@@ -305,6 +306,19 @@ fn collect_account_indices(expr: &Expr, indices: &mut Vec<AccountSliceIndex>) {
             if let Some(expr) = &ret.expr {
                 collect_account_indices(expr, indices);
             }
+        }
+        Expr::Reference(reference) => {
+            collect_account_indices(&reference.expr, indices);
+        }
+        Expr::Try(expr_try) => {
+            collect_account_indices(&expr_try.expr, indices);
+        }
+        Expr::Assign(assign) => {
+            collect_account_indices(&assign.left, indices);
+            collect_account_indices(&assign.right, indices);
+        }
+        Expr::Let(let_expr) => {
+            collect_account_indices(&let_expr.expr, indices);
         }
         _ => {}
     }

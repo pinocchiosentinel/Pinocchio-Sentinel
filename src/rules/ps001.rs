@@ -20,23 +20,19 @@ impl Rule for Ps001 {
         let mut findings = Vec::new();
         
         for account in &graph.accounts {
-            // Check if account is accessed (read or write)
-            if account.access_type != crate::graph::AccessType::Read || account.access_type == crate::graph::AccessType::Both {
-                // Check if is_signer check is present before use
-                if !graph.has_check_before_use(account.index, &CheckType::IsSigner) {
-                    findings.push(Finding {
-                        rule_id: self.id().to_string(),
-                        severity: self.severity(),
-                        confidence: Confidence::Medium,
-                        message: format!(
-                            "Account '{}' (index {}) is used without is_signer() check",
-                            account.variable_name, account.index
-                        ),
-                        account_index: Some(account.index),
-                        line_number: account.line_number,
-                        evidence: None,
-                    });
-                }
+            if !graph.has_check_before_use(account.index, &CheckType::IsSigner) {
+                findings.push(Finding {
+                    rule_id: self.id().to_string(),
+                    severity: self.severity(),
+                    confidence: Confidence::Medium,
+                    message: format!(
+                        "Account '{}' (index {}) is used without is_signer() check",
+                        account.variable_name, account.index
+                    ),
+                    account_index: Some(account.index),
+                    line_number: account.line_number,
+                    evidence: None,
+                });
             }
         }
         

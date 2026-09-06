@@ -102,60 +102,59 @@ pub fn build_access_graph(handler: &HandlerInfo, ast: &File) -> AccountAccessGra
         }
     }
 
-    // If we found the handler function, traverse its body
+    // Collect checks from either the named function or the inline handler body
+    let mut collector = CheckCollector {
+        account_indices: account_indices.clone(),
+        checks: Vec::new(),
+        line_number_start: 0,
+    };
+
     if let Some(handler_fn) = handler_fn {
-        let mut collector = CheckCollector {
-            account_indices: account_indices.clone(),
-            checks: Vec::new(),
-            line_number_start: line_of_span(handler_fn.span()),
-        };
-
-        // Collect all checks from the function body
+        collector.line_number_start = line_of_span(handler_fn.span());
         collect_checks_from_block(&handler_fn.block, &mut collector);
+    } else if let Some(ref body) = handler.body {
+        collector.line_number_start = line_of_span(body.span());
+        collect_checks_from_expr(body, &mut collector);
+    }
 
-        // Assign checks to accounts in the graph
-        for check in &collector.checks {
-            if let Some(ref account_idx) = check.account_index {
-                let idx = *account_idx;
-                // Ensure the account exists in the graph
-                if graph.get_account(idx).is_none() {
-                    graph.add_account(AccountAccess {
-                        index: idx,
-                        variable_name: format!("accounts[{}]", idx),
-                        access_type: AccessType::Read,
-                        checks: Vec::new(),
-                        line_number: None,
-                    });
-                }
-                if let Some(account) = graph.get_account_mut(idx) {
-                    account.checks.push(CheckInfo {
-                        check_type: check.check_type.clone(),
-                        line_number: check.line_number,
-                        is_before_use: check.is_before_use,
-                    });
-                    // Update access type based on check
-                    match &check.check_type {
-                        CheckType::IsWritable => {
-                            if account.access_type == AccessType::Read {
-                                account.access_type = AccessType::Write;
-                            } else {
-                                account.access_type = AccessType::Both;
-                            }
-                        }
-                        _ => {
-                            // Read checks don't change access type beyond Read
+    // Assign checks to accounts in the graph
+    for check in &collector.checks {
+        if let Some(ref account_idx) = check.account_index {
+            let idx = *account_idx;
+            if graph.get_account(idx).is_none() {
+                graph.add_account(AccountAccess {
+                    index: idx,
+                    variable_name: format!("accounts[{}]", idx),
+                    access_type: AccessType::Read,
+                    checks: Vec::new(),
+                    line_number: None,
+                });
+            }
+            if let Some(account) = graph.get_account_mut(idx) {
+                account.checks.push(CheckInfo {
+                    check_type: check.check_type.clone(),
+                    line_number: check.line_number,
+                    is_before_use: check.is_before_use,
+                });
+                match &check.check_type {
+                    CheckType::IsWritable => {
+                        if account.access_type == AccessType::Read {
+                            account.access_type = AccessType::Write;
+                        } else {
+                            account.access_type = AccessType::Both;
                         }
                     }
+                    _ => {}
                 }
             }
         }
+    }
 
-        // Set line numbers from first use
-        for idx in &account_indices {
-            if let Some(account) = graph.get_account_mut(*idx) {
-                if account.line_number.is_none() {
-                    account.line_number = Some(collector.line_number_start);
-                }
+    // Set line numbers from first use
+    for idx in &account_indices {
+        if let Some(account) = graph.get_account_mut(*idx) {
+            if account.line_number.is_none() {
+                account.line_number = Some(collector.line_number_start);
             }
         }
     }

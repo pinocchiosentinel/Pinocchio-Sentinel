@@ -20,23 +20,19 @@ impl Rule for Ps002 {
         let mut findings = Vec::new();
         
         for account in &graph.accounts {
-            // Check if account is read
-            if account.access_type == crate::graph::AccessType::Read || account.access_type == crate::graph::AccessType::Both {
-                // Check if owned_by check is present before use
-                if !graph.has_check_before_use(account.index, &CheckType::OwnedBy) {
-                    findings.push(Finding {
-                        rule_id: self.id().to_string(),
-                        severity: self.severity(),
-                        confidence: Confidence::Medium,
-                        message: format!(
-                            "Account '{}' (index {}) is read without owned_by() check",
-                            account.variable_name, account.index
-                        ),
-                        account_index: Some(account.index),
-                        line_number: account.line_number,
-                        evidence: None,
-                    });
-                }
+            if !graph.has_check_before_use(account.index, &CheckType::OwnedBy) {
+                findings.push(Finding {
+                    rule_id: self.id().to_string(),
+                    severity: self.severity(),
+                    confidence: Confidence::Medium,
+                    message: format!(
+                        "Account '{}' (index {}) is read without owned_by() check",
+                        account.variable_name, account.index
+                    ),
+                    account_index: Some(account.index),
+                    line_number: account.line_number,
+                    evidence: None,
+                });
             }
         }
         

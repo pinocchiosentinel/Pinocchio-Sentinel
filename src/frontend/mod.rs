@@ -2,7 +2,7 @@ pub mod entrypoint;
 pub mod router;
 pub mod discriminator;
 
-use syn::File;
+use syn::{File, Expr};
 use std::path::{Path, PathBuf};
 
 use crate::config::SentinelConfig;
@@ -39,6 +39,7 @@ pub struct HandlerInfo {
     pub discriminator_value: DiscriminatorValue,
     pub handler_name: String,
     pub account_slice_indices: Vec<AccountSliceIndex>,
+    pub body: Option<Expr>,
 }
 
 #[derive(Debug, Clone)]

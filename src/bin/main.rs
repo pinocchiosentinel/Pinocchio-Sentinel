@@ -124,12 +124,11 @@ fn main() -> anyhow::Result<()> {
         match parse_program(source_file, &config) {
             Ok(program) => {
                 if let Some(ref router) = program.router {
-                    let graph = build_access_graph(
-                        &router.handlers[0],
-                        &program.ast,
-                    );
-                    let findings = run_all_rules(&graph);
-                    all_findings.extend(findings);
+                    for handler in &router.handlers {
+                        let graph = build_access_graph(handler, &program.ast);
+                        let findings = run_all_rules(&graph);
+                        all_findings.extend(findings);
+                    }
                 }
                 files_scanned += 1;
             }
@@ -195,6 +194,51 @@ fn find_source_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
         return Ok(files);
     }
 
+    if let Some(cargo_toml) = find_cargo_toml(path) {
+        if let Some(workspace_members) = parse_workspace_members(&cargo_toml) {
+            let cargo_dir = cargo_toml.parent().unwrap_or(path);
+            for member in workspace_members {
+                let member_path = cargo_dir.join(&member);
+                if member_path.exists() {
+                    collect_rs_files(&member_path, &mut files)?;
+                }
+            }
+            return Ok(files);
+        }
+    }
+
+    collect_rs_files(path, &mut files)?;
+    Ok(files)
+}
+
+fn find_cargo_toml(path: &PathBuf) -> Option<PathBuf> {
+    let cargo_toml = path.join("Cargo.toml");
+    if cargo_toml.exists() {
+        return Some(cargo_toml);
+    }
+    None
+}
+
+fn parse_workspace_members(cargo_toml: &PathBuf) -> Option<Vec<String>> {
+    let content = std::fs::read_to_string(cargo_toml).ok()?;
+    let toml: toml::Value = toml::from_str(&content).ok()?;
+
+    if let Some(workspace) = toml.get("workspace") {
+        if let Some(members) = workspace.get("members") {
+            if let Some(arr) = members.as_array() {
+                return Some(
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect(),
+                );
+            }
+        }
+    }
+
+    None
+}
+
+fn collect_rs_files(path: &PathBuf, files: &mut Vec<PathBuf>) -> anyhow::Result<()> {
     for entry in walkdir::WalkDir::new(path) {
         let entry = entry?;
         let path = entry.path();
@@ -210,8 +254,7 @@ fn find_source_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
             }
         }
     }
-
-    Ok(files)
+    Ok(())
 }
 
 fn show_rules(rule_id: Option<&str>) {
