@@ -14,6 +14,8 @@ pub struct RuleConfig {
     pub disabled_rules: Vec<String>,
     pub severity_overrides: std::collections::HashMap<String, String>,
     pub allow_list: Vec<String>,
+    #[serde(default)]
+    pub min_severity: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,6 +57,7 @@ impl Default for SentinelConfig {
                 disabled_rules: Vec::new(),
                 severity_overrides: std::collections::HashMap::new(),
                 allow_list: Vec::new(),
+                min_severity: None,
             },
             output: OutputConfig {
                 format: "cli".to_string(),

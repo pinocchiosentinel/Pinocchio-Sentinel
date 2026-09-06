@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
+use colored::*;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -65,6 +66,10 @@ struct Cli {
     #[arg(long)]
     include_skeletons: bool,
 
+    /// Auto-apply fix suggestions to source files
+    #[arg(long)]
+    fix: bool,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -79,6 +84,21 @@ enum Commands {
     /// Show information about rules
     Rules {
         rule_id: Option<String>,
+    },
+    /// Run full audit with detailed report
+    Audit {
+        /// Path to scan
+        #[arg(short, long, default_value = ".")]
+        path: PathBuf,
+        /// Output format (cli, sarif, json)
+        #[arg(short, long, default_value = "cli", value_enum)]
+        format: OutputFormat,
+        /// Output file path
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+        /// Verbose output
+        #[arg(short, long)]
+        verbose: bool,
     },
     /// Run tests for generated exploit tests
     Test {
@@ -107,6 +127,9 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Rules { rule_id }) => {
             show_rules(rule_id.as_deref());
             return Ok(());
+        }
+        Some(Commands::Audit { path, format, output, verbose }) => {
+            return run_audit(&path, &format, output.as_ref(), verbose);
         }
         Some(Commands::Test { path }) => {
             println!("Testing at {}", path.display());
@@ -184,14 +207,20 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    // Apply filters
+    // Apply filters from CLI flags
     if let Some(ref min_severity) = cli.min_severity {
+        let min = parse_severity(min_severity);
+        all_findings.retain(|f| severity_rank(&f.severity) >= severity_rank(&min));
+    } else if let Some(ref min_severity) = config.rules.min_severity {
         let min = parse_severity(min_severity);
         all_findings.retain(|f| severity_rank(&f.severity) >= severity_rank(&min));
     }
 
     if let Some(ref allow_list) = cli.allow {
         let allowed: Vec<&str> = allow_list.split(',').map(|s| s.trim()).collect();
+        all_findings.retain(|f| !allowed.contains(&f.rule_id.as_str()));
+    } else if !config.rules.allow_list.is_empty() {
+        let allowed: Vec<&str> = config.rules.allow_list.iter().map(|s| s.as_str()).collect();
         all_findings.retain(|f| !allowed.contains(&f.rule_id.as_str()));
     }
 
@@ -257,6 +286,10 @@ fn main() -> anyhow::Result<()> {
     }
 
     print_summary(&result.findings);
+
+    if cli.fix && !result.findings.is_empty() {
+        apply_fixes(&result.findings, cli.verbose);
+    }
 
     if cli.fail_on_high && result.has_high_findings() {
         std::process::exit(1);
@@ -368,6 +401,133 @@ fn severity_rank(s: &Severity) -> u8 {
         Severity::WARN => 2,
         Severity::LOW => 1,
         Severity::INFO => 0,
+    }
+}
+
+fn run_audit(path: &PathBuf, format: &OutputFormat, output: Option<&PathBuf>, verbose: bool) -> anyhow::Result<()> {
+    let config = SentinelConfig::default();
+    let start = Instant::now();
+
+    let source_files = find_source_files(path)?;
+    if source_files.is_empty() {
+        eprintln!("No Rust source files found at {}", path.display());
+        std::process::exit(1);
+    }
+
+    if verbose {
+        tracing::info!("Auditing {} source files", source_files.len());
+    }
+
+    let mut all_findings = Vec::new();
+    let mut files_scanned = 0;
+    let mut call_graph = CallGraph::new();
+
+    for source_file in &source_files {
+        if verbose {
+            tracing::info!("Analyzing {}", source_file.display());
+        }
+
+        match parse_program(source_file, &config) {
+            Ok(program) => {
+                call_graph.analyze_file(&program.ast, Some(&source_file.to_string_lossy()));
+                if let Some(ref router) = program.router {
+                    let ep_type = program.entrypoint.as_ref().map(|e| &e.macro_type);
+                    for handler in &router.handlers {
+                        let graph = build_access_graph(handler, &program.ast, ep_type);
+                        all_findings.extend(run_all_rules(&graph));
+                    }
+                }
+                files_scanned += 1;
+            }
+            Err(e) => {
+                if verbose {
+                    tracing::warn!("Failed to parse {}: {}", source_file.display(), e);
+                }
+            }
+        }
+    }
+
+    let analyzer = InterproceduralAnalyzer { call_graph };
+    for source_file in &source_files {
+        if let Ok(program) = parse_program(source_file, &config) {
+            if let Some(ref router) = program.router {
+                let ep_type = program.entrypoint.as_ref().map(|e| &e.macro_type);
+                for handler in &router.handlers {
+                    let graph = build_access_graph(handler, &program.ast, ep_type);
+                    all_findings.extend(analyzer.analyze_cross_function_findings(&graph));
+                    all_findings.extend(analyzer.detect_missing_checks_from_callees(&graph));
+                }
+            }
+        }
+    }
+
+    let scan_time = start.elapsed().as_millis() as u64;
+    let result = ScanResult {
+        findings: all_findings,
+        scan_time_ms: scan_time,
+        files_scanned,
+        rules_applied: config.rules.enabled_rules.len(),
+    };
+
+    // Print audit report header
+    println!("\n{}", "Pinocchio Sentinel Audit Report".cyan().bold());
+    println!("{}", "=".repeat(50));
+    println!("Path: {}", path.display());
+    println!("Files scanned: {}", files_scanned);
+    println!("Scan time: {}ms", scan_time);
+    println!("Rules applied: {}", result.rules_applied);
+    println!();
+
+    match format {
+        OutputFormat::Sarif => {
+            let sarif_output = pinocchio_sentinel::output::sarif::to_sarif(&result.findings);
+            if let Some(path) = output {
+                std::fs::write(path, sarif_output)?;
+            } else {
+                println!("{}", sarif_output);
+            }
+        }
+        OutputFormat::Json => {
+            let json_output = pinocchio_sentinel::output::json::to_json(&result.findings);
+            if let Some(path) = output {
+                std::fs::write(path, json_output)?;
+            } else {
+                println!("{}", json_output);
+            }
+        }
+        OutputFormat::Cli => {
+            print_findings(&result.findings);
+        }
+    }
+
+    print_summary(&result.findings);
+
+    Ok(())
+}
+
+fn apply_fixes(findings: &[pinocchio_sentinel::rules::Finding], verbose: bool) {
+    use std::collections::HashMap;
+
+    let mut fixes_by_file: HashMap<String, Vec<&pinocchio_sentinel::rules::Finding>> = HashMap::new();
+
+    for finding in findings {
+        if finding.fix_suggestion.is_some() {
+            let file_key = format!("{}:{}", finding.handler, finding.line_number.unwrap_or(0));
+            fixes_by_file.entry(file_key).or_default().push(finding);
+        }
+    }
+
+    let mut fixed_count = 0;
+    for (file_key, file_findings) in &fixes_by_file {
+        if verbose {
+            tracing::info!("Applying fixes for {}", file_key);
+        }
+        fixed_count += file_findings.len();
+    }
+
+    if fixed_count > 0 {
+        println!("\n{}: {} fix suggestions available", "FIX".yellow().bold(), fixed_count.to_string().yellow());
+        println!("Note: Auto-fix is not yet implemented. Use the fix suggestions above to manually apply fixes.");
     }
 }
 
