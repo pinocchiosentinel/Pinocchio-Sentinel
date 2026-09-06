@@ -1,4 +1,4 @@
-use super::{Rule, Finding, Severity, Confidence};
+use super::{Confidence, Finding, Rule, Severity};
 use crate::graph::{AccountAccessGraph, CheckType};
 
 pub struct Ps014;
@@ -29,8 +29,12 @@ impl Rule for Ps014 {
                 || name_lower.contains("slot_hashes");
 
             if is_sysvar {
-                let has_pubkey_check = graph.has_check_before_use(account.index, &CheckType::OwnedBy)
-                    || graph.has_check_before_use(account.index, &CheckType::Custom("pubkey".to_string()));
+                let has_pubkey_check = graph
+                    .has_check_before_use(account.index, &CheckType::OwnedBy)
+                    || graph.has_check_before_use(
+                        account.index,
+                        &CheckType::Custom("pubkey".to_string()),
+                    );
 
                 if !has_pubkey_check {
                     findings.push(Finding {
@@ -61,7 +65,7 @@ impl Rule for Ps014 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType};
+    use crate::graph::{AccessType, AccountAccess};
 
     #[test]
     fn test_ps014_sysvar_no_pubkey() {

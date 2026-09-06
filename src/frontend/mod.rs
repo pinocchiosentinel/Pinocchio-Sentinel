@@ -1,9 +1,9 @@
+pub mod discriminator;
 pub mod entrypoint;
 pub mod router;
-pub mod discriminator;
 
-use syn::{File, Expr};
 use std::path::{Path, PathBuf};
+use syn::{Expr, File};
 
 use crate::config::SentinelConfig;
 
@@ -70,14 +70,14 @@ pub struct AccountSliceIndex {
 pub fn parse_program(path: &Path, config: &SentinelConfig) -> anyhow::Result<ParsedProgram> {
     let source = std::fs::read_to_string(path)?;
     let ast = syn::parse_file(&source)?;
-    
+
     let entrypoint = entrypoint::find_entrypoint(&ast);
     let router = if let Some(ref ep) = entrypoint {
         Some(router::recover_router(&ast, ep, config)?)
     } else {
         None
     };
-    
+
     Ok(ParsedProgram {
         ast,
         entrypoint,

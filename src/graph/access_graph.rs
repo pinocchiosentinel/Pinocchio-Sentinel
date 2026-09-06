@@ -1,6 +1,6 @@
-use crate::frontend::{HandlerInfo, EntrypointMacro};
-use syn::{File, Item, ItemFn, Expr, Stmt, ExprMethodCall, ExprBlock, Pat, Lit, ExprStruct};
+use crate::frontend::{EntrypointMacro, HandlerInfo};
 use syn::spanned::Spanned;
+use syn::{Expr, ExprBlock, ExprMethodCall, ExprStruct, File, Item, ItemFn, Lit, Pat, Stmt};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AccessType {
@@ -83,7 +83,11 @@ impl AccountAccessGraph {
     }
 }
 
-pub fn build_access_graph(handler: &HandlerInfo, ast: &File, entrypoint_type: Option<&EntrypointMacro>) -> AccountAccessGraph {
+pub fn build_access_graph(
+    handler: &HandlerInfo,
+    ast: &File,
+    entrypoint_type: Option<&EntrypointMacro>,
+) -> AccountAccessGraph {
     let mut graph = AccountAccessGraph::new(&handler.handler_name);
     graph.entrypoint_type = entrypoint_type.cloned();
 
@@ -91,7 +95,11 @@ pub fn build_access_graph(handler: &HandlerInfo, ast: &File, entrypoint_type: Op
     let handler_fn = find_function_by_name(ast, &handler.handler_name);
 
     // Collect account indices from the handler info
-    let account_indices: Vec<usize> = handler.account_slice_indices.iter().map(|a| a.index).collect();
+    let account_indices: Vec<usize> = handler
+        .account_slice_indices
+        .iter()
+        .map(|a| a.index)
+        .collect();
 
     // Pre-populate the graph with known account indices
     for idx in &account_indices {
@@ -405,7 +413,13 @@ fn try_extract_account_index_from_expr(expr: &Expr) -> Option<usize> {
     match expr {
         Expr::Index(index_expr) => {
             if let Expr::Path(path) = &*index_expr.expr {
-                if path.path.segments.last().map(|s| s.ident == "accounts").unwrap_or(false) {
+                if path
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident == "accounts")
+                    .unwrap_or(false)
+                {
                     if let Expr::Lit(lit) = &*index_expr.index {
                         if let Lit::Int(int_lit) = &lit.lit {
                             return int_lit.base10_parse::<usize>().ok();
@@ -426,7 +440,13 @@ fn resolve_account_index(expr: &Expr, collector: &mut CheckCollector) -> Option<
         Expr::Index(index_expr) => {
             // accounts[n]
             if let Expr::Path(path) = &*index_expr.expr {
-                if path.path.segments.last().map(|s| s.ident == "accounts").unwrap_or(false) {
+                if path
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident == "accounts")
+                    .unwrap_or(false)
+                {
                     if let Expr::Lit(lit) = &*index_expr.index {
                         if let Lit::Int(int_lit) = &lit.lit {
                             return int_lit.base10_parse::<usize>().ok();
@@ -441,7 +461,13 @@ fn resolve_account_index(expr: &Expr, collector: &mut CheckCollector) -> Option<
             // accounts.get(n)
             if method_call.method == "get" && method_call.args.len() == 1 {
                 if let Expr::Path(path) = &*method_call.receiver {
-                    if path.path.segments.last().map(|s| s.ident == "accounts").unwrap_or(false) {
+                    if path
+                        .path
+                        .segments
+                        .last()
+                        .map(|s| s.ident == "accounts")
+                        .unwrap_or(false)
+                    {
                         if let Expr::Lit(lit) = &method_call.args[0] {
                             if let Lit::Int(int_lit) = &lit.lit {
                                 return int_lit.base10_parse::<usize>().ok();
@@ -460,7 +486,9 @@ fn resolve_account_index(expr: &Expr, collector: &mut CheckCollector) -> Option<
             }
             // Heuristic: if variable is named like "account_0" or "acc_0"
             if var_name.starts_with("account_") || var_name.starts_with("acc_") {
-                let suffix = var_name.trim_start_matches("account_").trim_start_matches("acc_");
+                let suffix = var_name
+                    .trim_start_matches("account_")
+                    .trim_start_matches("acc_");
                 suffix.parse::<usize>().ok()
             } else {
                 None

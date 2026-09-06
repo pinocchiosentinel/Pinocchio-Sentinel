@@ -1,4 +1,4 @@
-use super::{Rule, Finding, Severity, Confidence};
+use super::{Confidence, Finding, Rule, Severity};
 use crate::graph::{AccountAccessGraph, CheckType};
 
 pub struct Ps013;
@@ -27,8 +27,14 @@ impl Rule for Ps013 {
 
             if is_cpi_call {
                 let has_check = graph.has_check_before_use(account.index, &CheckType::CpiReturn)
-                    || graph.has_check_before_use(account.index, &CheckType::Custom("is_ok".to_string()))
-                    || graph.has_check_before_use(account.index, &CheckType::Custom("unwrap".to_string()));
+                    || graph.has_check_before_use(
+                        account.index,
+                        &CheckType::Custom("is_ok".to_string()),
+                    )
+                    || graph.has_check_before_use(
+                        account.index,
+                        &CheckType::Custom("unwrap".to_string()),
+                    );
 
                 if !has_check {
                     findings.push(Finding {
@@ -58,7 +64,7 @@ impl Rule for Ps013 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType, CheckInfo};
+    use crate::graph::{AccessType, AccountAccess, CheckInfo};
 
     #[test]
     fn test_ps013_unchecked_cpi() {

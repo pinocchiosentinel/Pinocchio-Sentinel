@@ -13,8 +13,8 @@ pub mod ps012;
 pub mod ps013;
 pub mod ps014;
 
-use serde::{Deserialize, Serialize};
 use crate::graph::AccountAccessGraph;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Finding {
@@ -75,10 +75,10 @@ pub fn get_all_rules() -> Vec<Box<dyn Rule>> {
 pub fn run_all_rules(graph: &AccountAccessGraph) -> Vec<Finding> {
     let rules = get_all_rules();
     let mut findings = Vec::new();
-    
+
     for rule in rules {
         findings.extend(rule.check(graph));
     }
-    
+
     findings
 }

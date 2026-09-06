@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::rules::Finding;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonOutput {
@@ -22,14 +22,29 @@ pub fn to_json(findings: &[Finding]) -> String {
         findings: findings.to_vec(),
         summary: JsonSummary {
             total_findings: findings.len(),
-            high_count: findings.iter().filter(|f| f.severity == crate::rules::Severity::HIGH).count(),
-            medium_count: findings.iter().filter(|f| f.severity == crate::rules::Severity::MEDIUM).count(),
-            warn_count: findings.iter().filter(|f| f.severity == crate::rules::Severity::WARN).count(),
-            low_count: findings.iter().filter(|f| f.severity == crate::rules::Severity::LOW).count(),
-            info_count: findings.iter().filter(|f| f.severity == crate::rules::Severity::INFO).count(),
+            high_count: findings
+                .iter()
+                .filter(|f| f.severity == crate::rules::Severity::HIGH)
+                .count(),
+            medium_count: findings
+                .iter()
+                .filter(|f| f.severity == crate::rules::Severity::MEDIUM)
+                .count(),
+            warn_count: findings
+                .iter()
+                .filter(|f| f.severity == crate::rules::Severity::WARN)
+                .count(),
+            low_count: findings
+                .iter()
+                .filter(|f| f.severity == crate::rules::Severity::LOW)
+                .count(),
+            info_count: findings
+                .iter()
+                .filter(|f| f.severity == crate::rules::Severity::INFO)
+                .count(),
         },
     };
-    
+
     serde_json::to_string_pretty(&output).unwrap_or_else(|_| "{}".to_string())
 }
 
@@ -40,7 +55,7 @@ pub fn parse_json(input: &str) -> Result<JsonOutput, serde_json::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rules::{Severity, Confidence};
+    use crate::rules::{Confidence, Severity};
 
     #[test]
     fn test_json_output() {
@@ -55,11 +70,11 @@ mod tests {
             evidence: None,
             fix_suggestion: None,
         }];
-        
+
         let json = to_json(&findings);
         assert!(json.contains("PS-001"));
         assert!(json.contains("high_count"));
-        
+
         let parsed: JsonOutput = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.summary.total_findings, 1);
         assert_eq!(parsed.summary.high_count, 1);

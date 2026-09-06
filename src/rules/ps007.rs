@@ -1,4 +1,4 @@
-use super::{Rule, Finding, Severity, Confidence};
+use super::{Confidence, Finding, Rule, Severity};
 use crate::graph::{AccountAccessGraph, CheckType};
 
 pub struct Ps007;
@@ -27,7 +27,10 @@ impl Rule for Ps007 {
 
             if is_program && account.access_type != crate::graph::AccessType::Read {
                 let has_comparison = graph.has_check_before_use(account.index, &CheckType::OwnedBy)
-                    || graph.has_check_before_use(account.index, &CheckType::Custom("program_id".to_string()));
+                    || graph.has_check_before_use(
+                        account.index,
+                        &CheckType::Custom("program_id".to_string()),
+                    );
 
                 if !has_comparison {
                     findings.push(Finding {
@@ -58,7 +61,7 @@ impl Rule for Ps007 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType};
+    use crate::graph::{AccessType, AccountAccess};
 
     #[test]
     fn test_ps007_cpi_target_no_comparison() {

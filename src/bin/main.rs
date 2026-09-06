@@ -3,12 +3,12 @@ use colored::*;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use pinocchio_sentinel::{
-    SentinelConfig, parse_program, build_access_graph, run_all_rules,
-    format_findings, print_findings, print_summary, ScanResult,
-};
-use pinocchio_sentinel::rules::{self, Severity};
 use pinocchio_sentinel::graph::{CallGraph, InterproceduralAnalyzer};
+use pinocchio_sentinel::rules::{self, Severity};
+use pinocchio_sentinel::{
+    build_access_graph, format_findings, parse_program, print_findings, print_summary,
+    run_all_rules, ScanResult, SentinelConfig,
+};
 
 #[derive(Debug, Clone, ValueEnum)]
 enum OutputFormat {
@@ -82,9 +82,7 @@ enum Commands {
         output: PathBuf,
     },
     /// Show information about rules
-    Rules {
-        rule_id: Option<String>,
-    },
+    Rules { rule_id: Option<String> },
     /// Run full audit with detailed report
     Audit {
         /// Path to scan
@@ -128,7 +126,12 @@ fn main() -> anyhow::Result<()> {
             show_rules(rule_id.as_deref());
             return Ok(());
         }
-        Some(Commands::Audit { path, format, output, verbose }) => {
+        Some(Commands::Audit {
+            path,
+            format,
+            output,
+            verbose,
+        }) => {
             return run_audit(&path, &format, output.as_ref(), verbose);
         }
         Some(Commands::Test { path }) => {
@@ -404,7 +407,12 @@ fn severity_rank(s: &Severity) -> u8 {
     }
 }
 
-fn run_audit(path: &PathBuf, format: &OutputFormat, output: Option<&PathBuf>, verbose: bool) -> anyhow::Result<()> {
+fn run_audit(
+    path: &PathBuf,
+    format: &OutputFormat,
+    output: Option<&PathBuf>,
+    verbose: bool,
+) -> anyhow::Result<()> {
     let config = SentinelConfig::default();
     let start = Instant::now();
 
@@ -508,7 +516,8 @@ fn run_audit(path: &PathBuf, format: &OutputFormat, output: Option<&PathBuf>, ve
 fn apply_fixes(findings: &[pinocchio_sentinel::rules::Finding], verbose: bool) {
     use std::collections::HashMap;
 
-    let mut fixes_by_file: HashMap<String, Vec<&pinocchio_sentinel::rules::Finding>> = HashMap::new();
+    let mut fixes_by_file: HashMap<String, Vec<&pinocchio_sentinel::rules::Finding>> =
+        HashMap::new();
 
     for finding in findings {
         if finding.fix_suggestion.is_some() {
@@ -526,7 +535,11 @@ fn apply_fixes(findings: &[pinocchio_sentinel::rules::Finding], verbose: bool) {
     }
 
     if fixed_count > 0 {
-        println!("\n{}: {} fix suggestions available", "FIX".yellow().bold(), fixed_count.to_string().yellow());
+        println!(
+            "\n{}: {} fix suggestions available",
+            "FIX".yellow().bold(),
+            fixed_count.to_string().yellow()
+        );
         println!("Note: Auto-fix is not yet implemented. Use the fix suggestions above to manually apply fixes.");
     }
 }
@@ -546,7 +559,12 @@ fn show_rules(rule_id: Option<&str>) {
         println!("Available rules:");
         println!();
         for rule in &all_rules {
-            println!("  {} - {} ({:?})", rule.id(), rule.description(), rule.severity());
+            println!(
+                "  {} - {} ({:?})",
+                rule.id(),
+                rule.description(),
+                rule.severity()
+            );
         }
     }
 }

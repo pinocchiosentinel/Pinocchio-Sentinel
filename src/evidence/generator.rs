@@ -1,4 +1,4 @@
-use super::{ExploitTest, ExploitGenerator};
+use super::{ExploitGenerator, ExploitTest};
 use crate::rules::Finding;
 
 pub struct DefaultExploitGenerator;
@@ -27,7 +27,10 @@ impl ExploitGenerator for DefaultExploitGenerator {
 
 impl DefaultExploitGenerator {
     fn generate_ps001_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-001".to_string(),
             test_code: format!(
@@ -61,7 +64,10 @@ mod ps001_exploit {{
     }
 
     fn generate_ps002_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-002".to_string(),
             test_code: format!(
@@ -94,7 +100,10 @@ mod ps002_exploit {{
     }
 
     fn generate_ps003_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-003".to_string(),
             test_code: format!(
@@ -127,7 +136,10 @@ mod ps003_exploit {{
     }
 
     fn generate_ps004_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-004".to_string(),
             test_code: format!(
@@ -162,7 +174,10 @@ mod ps004_exploit {{
     }
 
     fn generate_ps005_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-005".to_string(),
             test_code: format!(
@@ -227,7 +242,10 @@ mod ps006_exploit {{
     }
 
     fn generate_ps007_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-007".to_string(),
             test_code: format!(
@@ -260,7 +278,10 @@ mod ps007_exploit {{
     }
 
     fn generate_ps008_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-008".to_string(),
             test_code: format!(
@@ -293,7 +314,10 @@ mod ps008_exploit {{
     }
 
     fn generate_ps009_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-009".to_string(),
             test_code: format!(
@@ -326,7 +350,10 @@ mod ps009_exploit {{
     }
 
     fn generate_ps010_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-010".to_string(),
             test_code: format!(
@@ -359,7 +386,10 @@ mod ps010_exploit {{
     }
 
     fn generate_ps011_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-011".to_string(),
             test_code: format!(
@@ -392,7 +422,10 @@ mod ps011_exploit {{
     }
 
     fn generate_ps012_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-012".to_string(),
             test_code: format!(
@@ -425,7 +458,10 @@ mod ps012_exploit {{
     }
 
     fn generate_ps013_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-013".to_string(),
             test_code: format!(
@@ -458,7 +494,10 @@ mod ps013_exploit {{
     }
 
     fn generate_ps014_test(&self, finding: &Finding) -> ExploitTest {
-        let account = finding.account_index.map(|i| format!("accounts[{}]", i)).unwrap_or_default();
+        let account = finding
+            .account_index
+            .map(|i| format!("accounts[{}]", i))
+            .unwrap_or_default();
         ExploitTest {
             rule_id: "PS-014".to_string(),
             test_code: format!(
@@ -524,7 +563,7 @@ mod {}_skeleton {{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rules::{Severity, Confidence};
+    use crate::rules::{Confidence, Severity};
 
     fn make_finding(rule_id: &str) -> Finding {
         Finding {
@@ -543,13 +582,20 @@ mod tests {
     #[test]
     fn test_generate_all_rules() {
         let generator = DefaultExploitGenerator;
-        let rules = ["PS-001","PS-002","PS-003","PS-004","PS-005","PS-006","PS-007","PS-008","PS-009","PS-010","PS-011","PS-012","PS-013","PS-014"];
+        let rules = [
+            "PS-001", "PS-002", "PS-003", "PS-004", "PS-005", "PS-006", "PS-007", "PS-008",
+            "PS-009", "PS-010", "PS-011", "PS-012", "PS-013", "PS-014",
+        ];
 
         for rule_id in rules {
             let finding = make_finding(rule_id);
             let test = generator.generate_test(rule_id, &finding);
             assert_eq!(test.rule_id, rule_id);
-            assert!(!test.is_skeleton, "{} should have full exploit generator", rule_id);
+            assert!(
+                !test.is_skeleton,
+                "{} should have full exploit generator",
+                rule_id
+            );
         }
     }
 

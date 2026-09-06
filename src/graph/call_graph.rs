@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use syn::{File, Item, ItemFn, Expr, Stmt, ExprCall, ExprMethodCall};
 use syn::spanned::Spanned;
+use syn::{Expr, ExprCall, ExprMethodCall, File, Item, ItemFn, Stmt};
 
 #[derive(Debug, Clone)]
 pub struct FunctionInfo {
@@ -302,7 +302,8 @@ impl CallGraph {
     }
 
     pub fn find_caller_of(&self, callee_name: &str) -> Vec<&CallSite> {
-        self.call_sites.iter()
+        self.call_sites
+            .iter()
             .filter(|cs| cs.callee == callee_name)
             .collect()
     }
@@ -316,7 +317,13 @@ fn try_extract_account_index(expr: &Expr) -> Option<usize> {
     match expr {
         Expr::Index(index_expr) => {
             if let Expr::Path(path) = &*index_expr.expr {
-                if path.path.segments.last().map(|s| s.ident == "accounts").unwrap_or(false) {
+                if path
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident == "accounts")
+                    .unwrap_or(false)
+                {
                     if let Expr::Lit(lit) = &*index_expr.index {
                         if let syn::Lit::Int(int_lit) = &lit.lit {
                             return int_lit.base10_parse::<usize>().ok();

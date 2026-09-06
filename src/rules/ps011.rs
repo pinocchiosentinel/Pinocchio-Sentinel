@@ -1,6 +1,6 @@
-use super::{Rule, Finding, Severity, Confidence};
-use crate::graph::AccountAccessGraph;
+use super::{Confidence, Finding, Rule, Severity};
 use crate::frontend::EntrypointMacro;
+use crate::graph::AccountAccessGraph;
 
 pub struct Ps011;
 
@@ -20,7 +20,9 @@ impl Rule for Ps011 {
     fn check(&self, graph: &AccountAccessGraph) -> Vec<Finding> {
         let mut findings = Vec::new();
 
-        let is_lazy = graph.entrypoint_type.as_ref()
+        let is_lazy = graph
+            .entrypoint_type
+            .as_ref()
             .map(|e| *e == EntrypointMacro::LazyProgramEntrypoint)
             .unwrap_or(false);
 
@@ -61,7 +63,7 @@ impl Rule for Ps011 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType};
+    use crate::graph::{AccessType, AccountAccess};
 
     #[test]
     fn test_ps011_lazy_entrypoint_no_gate() {

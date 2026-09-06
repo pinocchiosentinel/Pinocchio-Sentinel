@@ -1,9 +1,11 @@
 pub mod access_graph;
 pub mod call_graph;
-pub mod interprocedural;
 pub mod check_ordering;
+pub mod interprocedural;
 
-pub use access_graph::{AccountAccessGraph, AccountAccess, AccessType, CheckInfo, CheckType, build_access_graph};
-pub use call_graph::{CallGraph, FunctionInfo, CallSite};
+pub use access_graph::{
+    build_access_graph, AccessType, AccountAccess, AccountAccessGraph, CheckInfo, CheckType,
+};
+pub use call_graph::{CallGraph, CallSite, FunctionInfo};
+pub use check_ordering::CheckOrdering;
 pub use interprocedural::InterproceduralAnalyzer;
-pub use check_ordering::{CheckOrdering};

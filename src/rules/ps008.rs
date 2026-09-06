@@ -1,4 +1,4 @@
-use super::{Rule, Finding, Severity, Confidence};
+use super::{Confidence, Finding, Rule, Severity};
 use crate::graph::{AccountAccessGraph, CheckType};
 
 pub struct Ps008;
@@ -28,10 +28,15 @@ impl Rule for Ps008 {
                 || name_lower.contains("config");
 
             if is_init_target {
-                let has_discriminant_check = graph.has_check_before_use(account.index, &CheckType::Discriminant);
-                let has_data_len_check = graph.has_check_before_use(account.index, &CheckType::DataLen);
+                let has_discriminant_check =
+                    graph.has_check_before_use(account.index, &CheckType::Discriminant);
+                let has_data_len_check =
+                    graph.has_check_before_use(account.index, &CheckType::DataLen);
 
-                if !has_discriminant_check && !has_data_len_check && account.access_type != crate::graph::AccessType::Read {
+                if !has_discriminant_check
+                    && !has_data_len_check
+                    && account.access_type != crate::graph::AccessType::Read
+                {
                     findings.push(Finding {
                         rule_id: self.id().to_string(),
                         severity: self.severity(),
@@ -59,7 +64,7 @@ impl Rule for Ps008 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType, CheckInfo};
+    use crate::graph::{AccessType, AccountAccess, CheckInfo};
 
     #[test]
     fn test_ps008_init_no_check() {

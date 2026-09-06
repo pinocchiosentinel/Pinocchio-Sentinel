@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::rules::{Finding, Severity};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SarifSchema {
@@ -175,12 +175,23 @@ fn get_sarif_rules() -> Vec<SarifRule> {
     ]
 }
 
-fn sarif_rule(id: &str, name: &str, short_desc: &str, full_desc: &str, tag: &str, precision: &str) -> SarifRule {
+fn sarif_rule(
+    id: &str,
+    name: &str,
+    short_desc: &str,
+    full_desc: &str,
+    tag: &str,
+    precision: &str,
+) -> SarifRule {
     SarifRule {
         id: id.to_string(),
         name: name.to_string(),
-        short_description: SarifMessage { text: short_desc.to_string() },
-        full_description: SarifMessage { text: full_desc.to_string() },
+        short_description: SarifMessage {
+            text: short_desc.to_string(),
+        },
+        full_description: SarifMessage {
+            text: full_desc.to_string(),
+        },
         default_configuration: SarifRuleConfiguration {
             level: "error".to_string(),
         },
@@ -226,7 +237,7 @@ fn severity_to_sarif_level(severity: &Severity) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rules::{Severity, Confidence};
+    use crate::rules::{Confidence, Severity};
 
     #[test]
     fn test_sarif_output() {
@@ -254,7 +265,10 @@ mod tests {
     #[test]
     fn test_all_rules_present() {
         let sarif = to_sarif(&[]);
-        let rules = ["PS-001","PS-002","PS-003","PS-004","PS-005","PS-006","PS-007","PS-008","PS-009","PS-010","PS-011","PS-012","PS-013","PS-014"];
+        let rules = [
+            "PS-001", "PS-002", "PS-003", "PS-004", "PS-005", "PS-006", "PS-007", "PS-008",
+            "PS-009", "PS-010", "PS-011", "PS-012", "PS-013", "PS-014",
+        ];
         for rule in rules {
             assert!(sarif.contains(rule), "SARIF should contain {}", rule);
         }

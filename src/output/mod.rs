@@ -1,9 +1,9 @@
-pub mod sarif;
 pub mod cli;
 pub mod json;
+pub mod sarif;
 
-use serde::{Deserialize, Serialize};
 use crate::rules::{Finding, Severity};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanResult {
@@ -22,23 +22,25 @@ impl ScanResult {
             rules_applied: 0,
         }
     }
-    
+
     pub fn high_findings(&self) -> Vec<&Finding> {
-        self.findings.iter()
+        self.findings
+            .iter()
             .filter(|f| f.severity == Severity::HIGH)
             .collect()
     }
-    
+
     pub fn medium_findings(&self) -> Vec<&Finding> {
-        self.findings.iter()
+        self.findings
+            .iter()
             .filter(|f| f.severity == Severity::MEDIUM)
             .collect()
     }
-    
+
     pub fn has_high_findings(&self) -> bool {
         self.high_findings().len() > 0
     }
-    
+
     pub fn summary(&self) -> String {
         format!(
             "Scanned {} files, applied {} rules, found {} findings ({} HIGH, {} MEDIUM)",

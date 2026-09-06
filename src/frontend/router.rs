@@ -1,12 +1,19 @@
-use syn::{File, Item, ItemFn, Expr, ExprMatch, Lit, Pat, Block, Stmt, ExprBlock};
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
+use syn::{Block, Expr, ExprBlock, ExprMatch, File, Item, ItemFn, Lit, Pat, Stmt};
 
-use super::{InstructionRouter, HandlerInfo, DiscriminatorScheme, DiscriminatorValue, AccountSliceIndex, EntrypointInfo};
+use super::{
+    AccountSliceIndex, DiscriminatorScheme, DiscriminatorValue, EntrypointInfo, HandlerInfo,
+    InstructionRouter,
+};
 use crate::config::SentinelConfig;
 
 const ENTRYPOINT_FN_NAMES: &[&str] = &["process_instruction", "process", "main"];
 
-pub fn recover_router(ast: &File, _entrypoint: &EntrypointInfo, _config: &SentinelConfig) -> Result<InstructionRouter> {
+pub fn recover_router(
+    ast: &File,
+    _entrypoint: &EntrypointInfo,
+    _config: &SentinelConfig,
+) -> Result<InstructionRouter> {
     let entry_fn = find_entrypoint_function(ast)?;
 
     match find_instruction_match(entry_fn) {
@@ -83,10 +90,12 @@ fn find_match_in_block(block: &Block) -> Result<&ExprMatch> {
 fn find_match_in_expr(expr: &Expr) -> Option<&ExprMatch> {
     match expr {
         Expr::Block(ExprBlock { block, .. }) => find_match_in_block(block).ok(),
-        Expr::If(if_expr) => {
-            find_match_in_block(&if_expr.then_branch).ok()
-                .or_else(|| if_expr.else_branch.as_ref().and_then(|(_, else_expr)| find_match_in_expr(else_expr)))
-        }
+        Expr::If(if_expr) => find_match_in_block(&if_expr.then_branch).ok().or_else(|| {
+            if_expr
+                .else_branch
+                .as_ref()
+                .and_then(|(_, else_expr)| find_match_in_expr(else_expr))
+        }),
         Expr::Match(match_expr) => Some(match_expr),
         Expr::Closure(closure) => find_match_in_expr(&closure.body),
         _ => None,
@@ -150,7 +159,10 @@ fn infer_from_pattern(pat: &Pat) -> DiscriminatorScheme {
     }
 }
 
-fn extract_handlers(match_expr: &ExprMatch, scheme: &DiscriminatorScheme) -> Result<Vec<HandlerInfo>> {
+fn extract_handlers(
+    match_expr: &ExprMatch,
+    scheme: &DiscriminatorScheme,
+) -> Result<Vec<HandlerInfo>> {
     let mut handlers = Vec::new();
 
     for arm in &match_expr.arms {
@@ -159,11 +171,12 @@ fn extract_handlers(match_expr: &ExprMatch, scheme: &DiscriminatorScheme) -> Res
         let account_indices = extract_account_indices_from_expr(&arm.body);
 
         // For inline handlers, use the discriminator value as the handler name
-        let effective_name = if handler_name == "unknown_handler" || handler_name == "Ok" || handler_name == "Err" {
-            format!("arm_{}", format!("{:?}", disc_value))
-        } else {
-            handler_name
-        };
+        let effective_name =
+            if handler_name == "unknown_handler" || handler_name == "Ok" || handler_name == "Err" {
+                format!("arm_{}", format!("{:?}", disc_value))
+            } else {
+                handler_name
+            };
 
         handlers.push(HandlerInfo {
             discriminator_value: disc_value,
@@ -176,7 +189,10 @@ fn extract_handlers(match_expr: &ExprMatch, scheme: &DiscriminatorScheme) -> Res
     Ok(handlers)
 }
 
-fn extract_discriminator_value(pat: &Pat, scheme: &DiscriminatorScheme) -> Result<DiscriminatorValue> {
+fn extract_discriminator_value(
+    pat: &Pat,
+    scheme: &DiscriminatorScheme,
+) -> Result<DiscriminatorValue> {
     match pat {
         Pat::Lit(lit_pat) => match &lit_pat.lit {
             Lit::Int(int_lit) => match scheme {
@@ -372,7 +388,13 @@ fn collect_account_indices_in_block(block: &Block, indices: &mut Vec<AccountSlic
 fn try_extract_account_index(expr: &Expr) -> Option<AccountSliceIndex> {
     if let Expr::Index(index_expr) = expr {
         if let Expr::Path(path) = &*index_expr.expr {
-            if path.path.segments.last().map(|s| s.ident == "accounts").unwrap_or(false) {
+            if path
+                .path
+                .segments
+                .last()
+                .map(|s| s.ident == "accounts")
+                .unwrap_or(false)
+            {
                 if let Expr::Lit(lit) = &*index_expr.index {
                     if let Lit::Int(int_lit) = &lit.lit {
                         if let Ok(idx) = int_lit.base10_parse::<usize>() {
@@ -399,7 +421,13 @@ fn try_extract_account_index_from_receiver(receiver: &Expr) -> Option<AccountSli
     if let Expr::MethodCall(method_call) = receiver {
         if method_call.method == "get" && method_call.args.len() == 1 {
             if let Expr::Path(path) = &*method_call.receiver {
-                if path.path.segments.last().map(|s| s.ident == "accounts").unwrap_or(false) {
+                if path
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident == "accounts")
+                    .unwrap_or(false)
+                {
                     if let Expr::Lit(lit) = &method_call.args[0] {
                         if let Lit::Int(int_lit) = &lit.lit {
                             if let Ok(idx) = int_lit.base10_parse::<usize>() {

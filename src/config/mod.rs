@@ -85,19 +85,22 @@ impl SentinelConfig {
             Ok(Self::default())
         }
     }
-    
+
     pub fn save(&self, path: &Path) -> anyhow::Result<()> {
         let content = toml::to_string_pretty(self)?;
         std::fs::write(path, content)?;
         Ok(())
     }
-    
+
     pub fn is_rule_enabled(&self, rule_id: &str) -> bool {
         !self.rules.disabled_rules.contains(&rule_id.to_string())
     }
-    
+
     pub fn get_severity_override(&self, rule_id: &str) -> Option<&str> {
-        self.rules.severity_overrides.get(rule_id).map(|s| s.as_str())
+        self.rules
+            .severity_overrides
+            .get(rule_id)
+            .map(|s| s.as_str())
     }
 }
 
@@ -116,7 +119,7 @@ mod tests {
     fn test_is_rule_enabled() {
         let config = SentinelConfig::default();
         assert!(config.is_rule_enabled("PS-001"));
-        
+
         let mut config = config;
         config.rules.disabled_rules.push("PS-001".to_string());
         assert!(!config.is_rule_enabled("PS-001"));

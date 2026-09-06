@@ -1,6 +1,6 @@
-use std::time::Instant;
+use pinocchio_sentinel::{build_access_graph, parse_program, run_all_rules, SentinelConfig};
 use std::path::PathBuf;
-use pinocchio_sentinel::{SentinelConfig, parse_program, build_access_graph, run_all_rules};
+use std::time::Instant;
 
 fn get_benchmark_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -63,8 +63,14 @@ fn benchmark_all_programs() {
     println!("  Programs scanned: {}", passed);
     println!("  Total findings: {}", total_findings);
     println!("  Total time: {}ms", total_time);
-    println!("  Average time per program: {}ms", total_time / passed as u64);
-    println!("  Average findings per program: {:.1}", total_findings as f64 / passed as f64);
+    println!(
+        "  Average time per program: {}ms",
+        total_time / passed as u64
+    );
+    println!(
+        "  Average findings per program: {:.1}",
+        total_findings as f64 / passed as f64
+    );
 
     assert!(total_findings > 0, "Should find at least one finding");
     assert!(total_time < 1000, "Should complete in under 1 second");
@@ -94,8 +100,15 @@ fn benchmark_vulnerable_program() {
     }
     let elapsed = start.elapsed().as_millis() as u64;
 
-    println!("  vulnerable-program — {} findings, {}ms", findings.len(), elapsed);
+    println!(
+        "  vulnerable-program — {} findings, {}ms",
+        findings.len(),
+        elapsed
+    );
 
-    assert!(findings.len() >= 5, "Should find at least 5 findings in vulnerable program");
+    assert!(
+        findings.len() >= 5,
+        "Should find at least 5 findings in vulnerable program"
+    );
     assert!(elapsed < 500, "Should complete in under 500ms");
 }

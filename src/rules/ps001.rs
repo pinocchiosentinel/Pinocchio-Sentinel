@@ -1,4 +1,4 @@
-use super::{Rule, Finding, Severity, Confidence};
+use super::{Confidence, Finding, Rule, Severity};
 use crate::graph::{AccountAccessGraph, CheckType};
 
 pub struct Ps001;
@@ -7,18 +7,18 @@ impl Rule for Ps001 {
     fn id(&self) -> &str {
         "PS-001"
     }
-    
+
     fn description(&self) -> &str {
         "Authority account used without an is_signer() assertion"
     }
-    
+
     fn severity(&self) -> Severity {
         Severity::HIGH
     }
-    
+
     fn check(&self, graph: &AccountAccessGraph) -> Vec<Finding> {
         let mut findings = Vec::new();
-        
+
         for account in &graph.accounts {
             if !graph.has_check_before_use(account.index, &CheckType::IsSigner) {
                 findings.push(Finding {
@@ -40,7 +40,7 @@ impl Rule for Ps001 {
                 });
             }
         }
-        
+
         findings
     }
 }
@@ -48,7 +48,7 @@ impl Rule for Ps001 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType, CheckInfo};
+    use crate::graph::{AccessType, AccountAccess, CheckInfo};
 
     #[test]
     fn test_ps001_missing_signer_check() {
@@ -60,7 +60,7 @@ mod tests {
             checks: Vec::new(),
             line_number: Some(10),
         });
-        
+
         let findings = Ps001.check(&graph);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].rule_id, "PS-001");
@@ -81,7 +81,7 @@ mod tests {
             }],
             line_number: Some(10),
         });
-        
+
         let findings = Ps001.check(&graph);
         assert!(findings.is_empty());
     }

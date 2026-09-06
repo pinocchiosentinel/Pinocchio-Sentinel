@@ -1,4 +1,4 @@
-use super::{Rule, Finding, Severity, Confidence};
+use super::{Confidence, Finding, Rule, Severity};
 use crate::graph::{AccountAccessGraph, CheckType};
 
 pub struct Ps005;
@@ -55,7 +55,7 @@ impl Rule for Ps005 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType, CheckInfo};
+    use crate::graph::{AccessType, AccountAccess, CheckInfo};
 
     #[test]
     fn test_ps005_missing_pda_bump() {

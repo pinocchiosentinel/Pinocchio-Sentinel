@@ -1,9 +1,6 @@
 use super::{DiscriminatorScheme, DiscriminatorValue};
 
-pub fn validate_discriminator(
-    value: &DiscriminatorValue,
-    scheme: &DiscriminatorScheme,
-) -> bool {
+pub fn validate_discriminator(value: &DiscriminatorValue, scheme: &DiscriminatorScheme) -> bool {
     match (value, scheme) {
         (DiscriminatorValue::OneByte(_), DiscriminatorScheme::OneByte) => true,
         (DiscriminatorValue::FourByteU32(_), DiscriminatorScheme::FourByteU32) => true,

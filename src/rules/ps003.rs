@@ -1,4 +1,4 @@
-use super::{Rule, Finding, Severity, Confidence};
+use super::{Confidence, Finding, Rule, Severity};
 use crate::graph::{AccountAccessGraph, CheckType};
 
 pub struct Ps003;
@@ -7,18 +7,18 @@ impl Rule for Ps003 {
     fn id(&self) -> &str {
         "PS-003"
     }
-    
+
     fn description(&self) -> &str {
         "Account cast without a preceding discriminant check; handles 1-byte and 4-byte u32 schemes"
     }
-    
+
     fn severity(&self) -> Severity {
         Severity::HIGH
     }
-    
+
     fn check(&self, graph: &AccountAccessGraph) -> Vec<Finding> {
         let mut findings = Vec::new();
-        
+
         for account in &graph.accounts {
             if account.access_type != crate::graph::AccessType::Read {
                 if !graph.has_check_before_use(account.index, &CheckType::Discriminant) {
@@ -41,7 +41,7 @@ impl Rule for Ps003 {
                 }
             }
         }
-        
+
         findings
     }
 }
@@ -49,7 +49,7 @@ impl Rule for Ps003 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType, CheckInfo};
+    use crate::graph::{AccessType, AccountAccess, CheckInfo};
 
     #[test]
     fn test_ps003_missing_discriminant_check() {
@@ -61,7 +61,7 @@ mod tests {
             checks: Vec::new(),
             line_number: Some(10),
         });
-        
+
         let findings = Ps003.check(&graph);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].rule_id, "PS-003");

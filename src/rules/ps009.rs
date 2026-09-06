@@ -1,5 +1,5 @@
-use super::{Rule, Finding, Severity, Confidence};
-use crate::graph::{AccountAccessGraph, AccessType};
+use super::{Confidence, Finding, Rule, Severity};
+use crate::graph::{AccessType, AccountAccessGraph};
 
 pub struct Ps009;
 

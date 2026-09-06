@@ -1,5 +1,5 @@
-use crate::graph::{CallGraph, AccountAccessGraph, CheckType};
-use crate::rules::{Finding, Severity, Confidence};
+use crate::graph::{AccountAccessGraph, CallGraph, CheckType};
+use crate::rules::{Confidence, Finding, Severity};
 
 #[derive(Debug)]
 pub struct InterproceduralAnalyzer {
@@ -13,14 +13,14 @@ impl InterproceduralAnalyzer {
         }
     }
 
-    pub fn analyze_cross_function_findings(
-        &self,
-        graph: &AccountAccessGraph,
-    ) -> Vec<Finding> {
+    pub fn analyze_cross_function_findings(&self, graph: &AccountAccessGraph) -> Vec<Finding> {
         let mut findings = Vec::new();
 
         for account in &graph.accounts {
-            if let Some(fn_info) = self.call_graph.get_function_requirements(&graph.handler_name) {
+            if let Some(fn_info) = self
+                .call_graph
+                .get_function_requirements(&graph.handler_name)
+            {
                 if fn_info.performs_cpi && !self.has_cpi_return_check(graph, account.index) {
                     findings.push(Finding {
                         rule_id: "PS-013-INTER".to_string(),
@@ -51,15 +51,14 @@ impl InterproceduralAnalyzer {
             || graph.has_check_before_use(index, &CheckType::Custom("unwrap".to_string()))
     }
 
-    pub fn detect_missing_checks_from_callees(
-        &self,
-        graph: &AccountAccessGraph,
-    ) -> Vec<Finding> {
+    pub fn detect_missing_checks_from_callees(&self, graph: &AccountAccessGraph) -> Vec<Finding> {
         let mut findings = Vec::new();
 
         for account in &graph.accounts {
-            let checks: Vec<&str> = account.checks.iter().map(|c| {
-                match &c.check_type {
+            let checks: Vec<&str> = account
+                .checks
+                .iter()
+                .map(|c| match &c.check_type {
                     CheckType::IsSigner => "is_signer",
                     CheckType::OwnedBy => "owned_by",
                     CheckType::IsWritable => "is_writable",
@@ -68,11 +67,14 @@ impl InterproceduralAnalyzer {
                     CheckType::PdaBump => "pda_bump",
                     CheckType::CpiReturn => "cpi_return",
                     CheckType::Custom(name) => name,
-                }
-            }).collect();
+                })
+                .collect();
 
             if checks.is_empty() && account.access_type == crate::graph::AccessType::Write {
-                if let Some(fn_info) = self.call_graph.get_function_requirements(&graph.handler_name) {
+                if let Some(fn_info) = self
+                    .call_graph
+                    .get_function_requirements(&graph.handler_name)
+                {
                     if fn_info.requires_signer.contains(&account.index) {
                         findings.push(Finding {
                             rule_id: "PS-001-INTER".to_string(),
@@ -116,7 +118,7 @@ impl InterproceduralAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{AccountAccess, AccessType, CheckInfo, FunctionInfo};
+    use crate::graph::{AccessType, AccountAccess, CheckInfo, FunctionInfo};
 
     #[test]
     fn test_empty_analyzer() {

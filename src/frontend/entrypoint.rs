@@ -1,12 +1,8 @@
-use syn::{File, Item, Macro};
-use syn::spanned::Spanned;
 use super::{EntrypointInfo, EntrypointMacro};
+use syn::spanned::Spanned;
+use syn::{File, Item, Macro};
 
-const ENTRYPOINT_MACROS: &[&str] = &[
-    "entrypoint",
-    "lazy_program_entrypoint",
-    "no_allocator",
-];
+const ENTRYPOINT_MACROS: &[&str] = &["entrypoint", "lazy_program_entrypoint", "no_allocator"];
 
 pub fn find_entrypoint(ast: &File) -> Option<EntrypointInfo> {
     for item in &ast.items {
@@ -24,14 +20,14 @@ pub fn find_entrypoint(ast: &File) -> Option<EntrypointInfo> {
 
 fn check_macro_invocation(mac: &Macro) -> Option<EntrypointInfo> {
     let macro_name = mac.path.segments.last()?.ident.to_string();
-    
+
     let macro_type = match macro_name.as_str() {
         "entrypoint" => EntrypointMacro::Entrypoint,
         "lazy_program_entrypoint" => EntrypointMacro::LazyProgramEntrypoint,
         "no_allocator" => EntrypointMacro::NoAllocator,
         _ => return None,
     };
-    
+
     Some(EntrypointInfo {
         macro_type,
         span: mac.span(),
@@ -62,7 +58,10 @@ mod tests {
         let ast = syn::parse_file(&code.to_string()).unwrap();
         let result = find_entrypoint(&ast);
         assert!(result.is_some());
-        assert_eq!(result.unwrap().macro_type, EntrypointMacro::LazyProgramEntrypoint);
+        assert_eq!(
+            result.unwrap().macro_type,
+            EntrypointMacro::LazyProgramEntrypoint
+        );
     }
 
     #[test]

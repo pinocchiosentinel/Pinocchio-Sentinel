@@ -1,4 +1,4 @@
-use super::{CheckType, CheckInfo};
+use super::{CheckInfo, CheckType};
 
 #[derive(Debug, Clone)]
 pub struct CheckOrdering {
@@ -13,7 +13,7 @@ impl CheckOrdering {
             has_violation: false,
         }
     }
-    
+
     pub fn add_check(&mut self, check: CheckInfo) {
         if check.is_before_use {
             self.checks.push(check);
@@ -21,24 +21,24 @@ impl CheckOrdering {
             self.has_violation = true;
         }
     }
-    
+
     pub fn has_required_check(&self, check_type: &CheckType) -> bool {
-        self.checks.iter().any(|c| &c.check_type == check_type && c.is_before_use)
+        self.checks
+            .iter()
+            .any(|c| &c.check_type == check_type && c.is_before_use)
     }
-    
+
     pub fn get_checks_after_line(&self, line: u32) -> Vec<&CheckInfo> {
-        self.checks.iter()
+        self.checks
+            .iter()
             .filter(|c| c.line_number > line)
             .collect()
     }
 }
 
-pub fn analyze_check_ordering(
-    checks: Vec<CheckInfo>,
-    first_use_line: u32,
-) -> CheckOrdering {
+pub fn analyze_check_ordering(checks: Vec<CheckInfo>, first_use_line: u32) -> CheckOrdering {
     let mut ordering = CheckOrdering::new();
-    
+
     for check in checks {
         let is_before = check.line_number < first_use_line;
         ordering.add_check(CheckInfo {
@@ -46,7 +46,7 @@ pub fn analyze_check_ordering(
             ..check
         });
     }
-    
+
     ordering
 }
 
@@ -68,7 +68,7 @@ mod tests {
                 is_before_use: true,
             },
         ];
-        
+
         let ordering = analyze_check_ordering(checks, 20);
         assert!(!ordering.has_violation);
         assert!(ordering.has_required_check(&CheckType::IsSigner));
@@ -77,14 +77,12 @@ mod tests {
 
     #[test]
     fn test_violation_ordering() {
-        let checks = vec![
-            CheckInfo {
-                check_type: CheckType::IsSigner,
-                line_number: 25, // After use at line 20
-                is_before_use: false,
-            },
-        ];
-        
+        let checks = vec![CheckInfo {
+            check_type: CheckType::IsSigner,
+            line_number: 25, // After use at line 20
+            is_before_use: false,
+        }];
+
         let ordering = analyze_check_ordering(checks, 20);
         assert!(ordering.has_violation);
         assert!(!ordering.has_required_check(&CheckType::IsSigner));

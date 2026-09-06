@@ -1,5 +1,5 @@
-use super::{Rule, Finding, Severity, Confidence};
-use crate::graph::{AccountAccessGraph, AccessType};
+use super::{Confidence, Finding, Rule, Severity};
+use crate::graph::{AccessType, AccountAccessGraph};
 
 pub struct Ps006;
 
@@ -19,7 +19,9 @@ impl Rule for Ps006 {
     fn check(&self, graph: &AccountAccessGraph) -> Vec<Finding> {
         let mut findings = Vec::new();
 
-        let mutating: Vec<&_> = graph.accounts.iter()
+        let mutating: Vec<&_> = graph
+            .accounts
+            .iter()
             .filter(|a| a.access_type == AccessType::Write || a.access_type == AccessType::Both)
             .collect();
 
@@ -30,9 +32,8 @@ impl Rule for Ps006 {
                 let name_a = a.variable_name.to_lowercase();
                 let name_b = b.variable_name.to_lowercase();
 
-                let alias = name_a == name_b
-                    || name_a.contains(&name_b)
-                    || name_b.contains(&name_a);
+                let alias =
+                    name_a == name_b || name_a.contains(&name_b) || name_b.contains(&name_a);
 
                 if alias {
                     findings.push(Finding {
