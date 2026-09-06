@@ -9,9 +9,13 @@ readme = "README.md"
 keywords = ["solana", "security", "static-analysis", "pinocchio", "sarif"]
 categories = ["command-line-utilities", "development-tools"]
 
+[lib]
+name = "pinocchio_sentinel"
+path = "src/lib.rs"
+
 [[bin]]
 name = "pinocchio-sentinel"
-path = "src/main.rs"
+path = "src/bin/main.rs"
 
 [dependencies]
 # AST parsing

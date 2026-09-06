@@ -6,6 +6,51 @@ Static analysis for Solana programs written without Anchor.
 
 Pinocchio Sentinel detects the security-check omissions that Anchor prevents structurally and that Pinocchio, by design, does not. It recovers a program's instruction router from its entrypoint macro, models how each handler reads and writes the account slice, and reports accounts that are used before they are validated.
 
+## Project Structure
+
+```
+src/
+  lib.rs              - Library crate (public API)
+  bin/main.rs         - CLI binary entry point
+  frontend/
+    mod.rs            - Program parsing, AST types
+    entrypoint.rs     - Entrypoint macro detection
+    router.rs         - Instruction router recovery
+    discriminator.rs  - Discriminator inference
+  graph/
+    mod.rs            - Access graph types
+    access_graph.rs   - Account access graph construction
+    check_ordering.rs - Check-before-use ordering analysis
+  rules/
+    mod.rs            - Rule trait, finding types
+    ps001.rs          - Missing is_signer() check
+    ps002.rs          - Missing owned_by() check
+    ps003.rs          - Missing discriminant check
+    ps004.rs          - Missing data_len() bounds check
+    ps005.rs          - PDA canonical bump (stub)
+    ps006.rs          - Account aliasing (stub)
+    ps007.rs          - CPI program ID (stub)
+    ps008.rs          - Init account reuse (stub)
+    ps009.rs          - Lamport zeroing (stub)
+    ps010.rs          - Missing is_writable() (stub)
+    ps011.rs          - Missing account-count gate (stub)
+    ps012.rs          - Slice bounds (stub)
+    ps014.rs          - Sysvar pubkey (stub)
+  output/
+    mod.rs            - Output types
+    cli.rs            - Colored terminal output
+    sarif.rs          - SARIF 2.1.0 format
+    json.rs           - JSON format
+  evidence/
+    mod.rs            - Exploit test types
+    generator.rs      - Test generation
+    test_runner.rs    - Test runner
+  config/
+    mod.rs            - Configuration loading
+tests/
+  programs/           - Test fixture programs
+```
+
 ## Installation
 
 ```bash
