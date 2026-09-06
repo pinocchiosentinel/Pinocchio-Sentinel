@@ -8,14 +8,36 @@ const ENTRYPOINT_FN_NAMES: &[&str] = &["process_instruction", "process", "main"]
 
 pub fn recover_router(ast: &File, _entrypoint: &EntrypointInfo, _config: &SentinelConfig) -> Result<InstructionRouter> {
     let entry_fn = find_entrypoint_function(ast)?;
-    let match_stmt = find_instruction_match(&entry_fn)?;
-    let scheme = infer_discriminator_scheme(&match_stmt);
-    let handlers = extract_handlers(&match_stmt, &scheme)?;
 
-    Ok(InstructionRouter {
-        discriminator_scheme: scheme,
-        handlers,
-    })
+    match find_instruction_match(entry_fn) {
+        Ok(match_stmt) => {
+            let scheme = infer_discriminator_scheme(match_stmt);
+            let handlers = extract_handlers(match_stmt, &scheme)?;
+            Ok(InstructionRouter {
+                discriminator_scheme: scheme,
+                handlers,
+            })
+        }
+        Err(_) => {
+            // No match dispatch — single handler function
+            let account_indices = extract_account_indices_from_fn(entry_fn);
+            let handler_name = entry_fn.sig.ident.to_string();
+            let body = Some(Expr::Block(syn::ExprBlock {
+                block: (*entry_fn.block).clone(),
+                attrs: Vec::new(),
+                label: None,
+            }));
+            Ok(InstructionRouter {
+                discriminator_scheme: DiscriminatorScheme::Inferred("single_fn".to_string()),
+                handlers: vec![HandlerInfo {
+                    discriminator_value: DiscriminatorValue::OneByte(0),
+                    handler_name,
+                    account_slice_indices: account_indices,
+                    body,
+                }],
+            })
+        }
+    }
 }
 
 fn find_entrypoint_function(ast: &File) -> Result<&ItemFn> {
@@ -393,4 +415,12 @@ fn try_extract_account_index_from_receiver(receiver: &Expr) -> Option<AccountSli
         }
     }
     None
+}
+
+fn extract_account_indices_from_fn(func: &ItemFn) -> Vec<AccountSliceIndex> {
+    let mut indices = Vec::new();
+    collect_account_indices_in_block(&func.block, &mut indices);
+    indices.sort_by_key(|a| a.index);
+    indices.dedup_by_key(|a| a.index);
+    indices
 }
