@@ -1,0 +1,309 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-09-06T13:13:40.360150700+00:00",
+  "scan_time_ms": 9,
+  "files_scanned": 11,
+  "rules_applied": 13,
+  "findings": [
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-003",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is cast without discriminant check"
+    },
+    {
+      "rule_id": "PS-004",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) may be zero-cast without data_len() bounds check"
+    },
+    {
+      "rule_id": "PS-008",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) may be an init target but has no discriminant or data_len check to verify it is not already initialized"
+    },
+    {
+      "rule_id": "PS-012",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is accessed by index/slice without data_len() bounds check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-003",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is cast without discriminant check"
+    },
+    {
+      "rule_id": "PS-004",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) may be zero-cast without data_len() bounds check"
+    },
+    {
+      "rule_id": "PS-008",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) may be an init target but has no discriminant or data_len check to verify it is not already initialized"
+    },
+    {
+      "rule_id": "PS-012",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is accessed by index/slice without data_len() bounds check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-003",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is cast without discriminant check"
+    },
+    {
+      "rule_id": "PS-004",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) may be zero-cast without data_len() bounds check"
+    },
+    {
+      "rule_id": "PS-008",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) may be an init target but has no discriminant or data_len check to verify it is not already initialized"
+    },
+    {
+      "rule_id": "PS-012",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is accessed by index/slice without data_len() bounds check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[2]' (index 2) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[2]' (index 2) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-001",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[2]' (index 2) is used without is_signer() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[1]' (index 1) is read without owned_by() check"
+    },
+    {
+      "rule_id": "PS-002",
+      "handler": "process_instruction",
+      "line_number": 8,
+      "message": "Account 'accounts[2]' (index 2) is read without owned_by() check"
+    }
+  ]
+}

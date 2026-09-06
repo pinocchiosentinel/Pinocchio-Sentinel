@@ -72,6 +72,14 @@ struct Cli {
     #[arg(long)]
     fix: bool,
 
+    /// Save scan results as baseline for future comparisons
+    #[arg(long)]
+    baseline: bool,
+
+    /// Compare against baseline file and show only new findings
+    #[arg(long)]
+    compare_baseline: Option<PathBuf>,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -326,6 +334,15 @@ fn main() -> anyhow::Result<()> {
 
     if cli.fix && !result.findings.is_empty() {
         apply_fixes(&result.findings, cli.verbose);
+    }
+
+    // Handle baseline operations
+    if cli.baseline {
+        save_baseline(&result, cli.verbose)?;
+    }
+
+    if let Some(ref baseline_path) = cli.compare_baseline {
+        compare_with_baseline(&result, baseline_path, cli.verbose)?;
     }
 
     if cli.fail_on_high && result.has_high_findings() {
@@ -805,4 +822,192 @@ fn show_rules(rule_id: Option<&str>) {
             );
         }
     }
+}
+
+/// Save scan results as baseline for future comparisons
+fn save_baseline(result: &ScanResult, verbose: bool) -> Result<(), anyhow::Error> {
+    use std::fs;
+
+    #[derive(serde::Serialize)]
+    struct BaselineEntry {
+        rule_id: String,
+        handler: String,
+        line_number: Option<u32>,
+        message: String,
+    }
+
+    #[derive(serde::Serialize)]
+    struct Baseline {
+        version: String,
+        timestamp: String,
+        scan_time_ms: u64,
+        files_scanned: usize,
+        rules_applied: usize,
+        findings: Vec<BaselineEntry>,
+    }
+
+    let findings: Vec<BaselineEntry> = result
+        .findings
+        .iter()
+        .map(|f| BaselineEntry {
+            rule_id: f.rule_id.clone(),
+            handler: f.handler.clone(),
+            line_number: f.line_number,
+            message: f.message.clone(),
+        })
+        .collect();
+
+    let baseline = Baseline {
+        version: "1.0".to_string(),
+        timestamp: chrono::Utc::now().to_rfc3339(),
+        scan_time_ms: result.scan_time_ms,
+        files_scanned: result.files_scanned,
+        rules_applied: result.rules_applied,
+        findings,
+    };
+
+    let json = serde_json::to_string_pretty(&baseline)?;
+    let path = std::path::PathBuf::from("sentinel-baseline.json");
+    fs::write(&path, &json)?;
+
+    if verbose {
+        println!(
+            "{}: Saved baseline with {} findings to {}",
+            "BASELINE".green().bold(),
+            result.findings.len(),
+            path.display()
+        );
+    } else {
+        println!(
+            "{}: Saved baseline to {}",
+            "BASELINE".green().bold(),
+            path.display()
+        );
+    }
+
+    Ok(())
+}
+
+/// Compare current scan with baseline and show only new findings
+fn compare_with_baseline(
+    current: &ScanResult,
+    baseline_path: &Path,
+    verbose: bool,
+) -> Result<(), anyhow::Error> {
+    use std::fs;
+
+    #[derive(serde::Deserialize)]
+    #[allow(dead_code)]
+    struct BaselineEntry {
+        rule_id: String,
+        handler: String,
+        line_number: Option<u32>,
+        message: String,
+    }
+
+    #[derive(serde::Deserialize)]
+    #[allow(dead_code)]
+    struct Baseline {
+        version: String,
+        timestamp: String,
+        findings: Vec<BaselineEntry>,
+    }
+
+    if !baseline_path.exists() {
+        eprintln!(
+            "{}: Baseline file not found: {}",
+            "ERROR".red().bold(),
+            baseline_path.display()
+        );
+        return Ok(());
+    }
+
+    let content = fs::read_to_string(baseline_path)?;
+    let baseline: Baseline = serde_json::from_str(&content)?;
+
+    if verbose {
+        println!(
+            "{}: Loaded baseline from {} ({} findings)",
+            "BASELINE".cyan().bold(),
+            baseline_path.display(),
+            baseline.findings.len()
+        );
+    }
+
+    // Create a set of baseline findings for quick lookup
+    let baseline_set: std::collections::HashSet<(String, String, Option<u32>)> = baseline
+        .findings
+        .iter()
+        .map(|f| (f.rule_id.clone(), f.handler.clone(), f.line_number))
+        .collect();
+
+    // Find new findings (not in baseline)
+    let new_findings: Vec<_> = current
+        .findings
+        .iter()
+        .filter(|f| {
+            let key = (f.rule_id.clone(), f.handler.clone(), f.line_number);
+            !baseline_set.contains(&key)
+        })
+        .collect();
+
+    // Find fixed findings (in baseline but not in current)
+    let current_set: std::collections::HashSet<(String, String, Option<u32>)> = current
+        .findings
+        .iter()
+        .map(|f| (f.rule_id.clone(), f.handler.clone(), f.line_number))
+        .collect();
+
+    let fixed_count = baseline
+        .findings
+        .iter()
+        .filter(|f| {
+            let key = (f.rule_id.clone(), f.handler.clone(), f.line_number);
+            !current_set.contains(&key)
+        })
+        .count();
+
+    println!("\n{}", "Baseline Comparison".cyan().bold());
+    println!("{}", "=".repeat(50));
+    println!("Baseline timestamp: {}", baseline.timestamp);
+    println!("Baseline findings: {}", baseline.findings.len());
+    println!("Current findings: {}", current.findings.len());
+    println!("New findings: {}", new_findings.len());
+    println!("Fixed findings: {}", fixed_count);
+
+    if !new_findings.is_empty() {
+        println!("\n{}", "New Findings:".red().bold());
+        for (i, finding) in new_findings.iter().enumerate() {
+            let severity = match finding.severity {
+                Severity::HIGH => "HIGH".red().bold(),
+                Severity::MEDIUM => "MEDIUM".yellow().bold(),
+                _ => "WARN".blue().bold(),
+            };
+
+            println!(
+                "{}. [{}] [{}] {} (Handler: {})",
+                i + 1,
+                finding.rule_id.yellow().bold(),
+                severity,
+                finding.message,
+                finding.handler
+            );
+
+            if let Some(line) = finding.line_number {
+                println!("   Line: {}", line);
+            }
+        }
+    } else {
+        println!("\n{}", "No new findings!".green().bold());
+    }
+
+    if fixed_count > 0 {
+        println!("\n{}", "Fixed Findings:".green().bold());
+        println!(
+            "{} issues were resolved since the baseline was created.",
+            fixed_count
+        );
+    }
+
+    Ok(())
 }
