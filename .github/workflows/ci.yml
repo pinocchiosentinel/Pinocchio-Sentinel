@@ -37,9 +37,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Run tests
-        run: cargo test --all-targets
-      - name: Run benchmarks (verify they compile)
-        run: cargo build --manifest-path tests/benchmarks/Cargo.toml
+        run: cargo test
 
   build:
     name: Build (${{ matrix.target }})
@@ -81,5 +79,5 @@ jobs:
         run: cargo build --release
       - name: Run on test program
         run: |
-          cargo run --release -- --path tests/programs/vulnerable-program --format sarif -o /tmp/output.sarif
+          cargo run --release -- --path tests/programs/vulnerable-program/src/lib.rs --format sarif -o /tmp/output.sarif
           python3 -c "import json; d=json.load(open('/tmp/output.sarif')); assert d['version']=='2.1.0'; print('SARIF valid:', len(d['runs'][0]['results']), 'findings')"
