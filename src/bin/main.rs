@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::*;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use pinocchio_sentinel::graph::{CallGraph, InterproceduralAnalyzer};
@@ -301,12 +301,12 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn find_source_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
+fn find_source_files(path: &Path) -> anyhow::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
 
     if path.is_file() {
-        if path.extension().map_or(false, |ext| ext == "rs") {
-            files.push(path.clone());
+        if path.extension().is_some_and(|ext| ext == "rs") {
+            files.push(path.to_path_buf());
         }
         return Ok(files);
     }
@@ -332,7 +332,7 @@ fn find_source_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-fn find_cargo_toml(path: &PathBuf) -> Option<PathBuf> {
+fn find_cargo_toml(path: &Path) -> Option<PathBuf> {
     let cargo_toml = path.join("Cargo.toml");
     if cargo_toml.exists() {
         return Some(cargo_toml);
@@ -340,7 +340,7 @@ fn find_cargo_toml(path: &PathBuf) -> Option<PathBuf> {
     None
 }
 
-fn parse_workspace_members(cargo_toml: &PathBuf) -> Option<Vec<String>> {
+fn parse_workspace_members(cargo_toml: &Path) -> Option<Vec<String>> {
     let content = std::fs::read_to_string(cargo_toml).ok()?;
     let toml: toml::Value = toml::from_str(&content).ok()?;
 
@@ -359,7 +359,7 @@ fn parse_workspace_members(cargo_toml: &PathBuf) -> Option<Vec<String>> {
     None
 }
 
-fn collect_rs_files(path: &PathBuf, files: &mut Vec<PathBuf>) -> anyhow::Result<()> {
+fn collect_rs_files(path: &Path, files: &mut Vec<PathBuf>) -> anyhow::Result<()> {
     for entry in walkdir::WalkDir::new(path) {
         let entry = entry?;
         let path = entry.path();
@@ -378,7 +378,7 @@ fn collect_rs_files(path: &PathBuf, files: &mut Vec<PathBuf>) -> anyhow::Result<
     Ok(())
 }
 
-fn collect_rs_files_from_crate(path: &PathBuf, files: &mut Vec<PathBuf>) -> anyhow::Result<()> {
+fn collect_rs_files_from_crate(path: &Path, files: &mut Vec<PathBuf>) -> anyhow::Result<()> {
     let src_dir = path.join("src");
     if src_dir.exists() {
         collect_rs_files(&src_dir, files)?;
@@ -408,7 +408,7 @@ fn severity_rank(s: &Severity) -> u8 {
 }
 
 fn run_audit(
-    path: &PathBuf,
+    path: &Path,
     format: &OutputFormat,
     output: Option<&PathBuf>,
     verbose: bool,

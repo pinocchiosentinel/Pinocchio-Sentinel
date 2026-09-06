@@ -4,13 +4,10 @@ use syn::{File, Item, Macro};
 
 pub fn find_entrypoint(ast: &File) -> Option<EntrypointInfo> {
     for item in &ast.items {
-        match item {
-            Item::Macro(mac) => {
-                if let Some(info) = check_macro_invocation(&mac.mac) {
-                    return Some(info);
-                }
+        if let Item::Macro(mac) = item {
+            if let Some(info) = check_macro_invocation(&mac.mac) {
+                return Some(info);
             }
-            _ => {}
         }
     }
     None

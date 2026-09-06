@@ -22,7 +22,7 @@ pub struct CallSite {
     pub account_indices: Vec<usize>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CallGraph {
     pub functions: HashMap<String, FunctionInfo>,
     pub call_sites: Vec<CallSite>,
@@ -30,10 +30,7 @@ pub struct CallGraph {
 
 impl CallGraph {
     pub fn new() -> Self {
-        Self {
-            functions: HashMap::new(),
-            call_sites: Vec::new(),
-        }
+        Self::default()
     }
 
     pub fn analyze_file(&mut self, ast: &File, file_path: Option<&str>) {

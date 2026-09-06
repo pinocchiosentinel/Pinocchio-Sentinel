@@ -5,7 +5,7 @@ pub mod sarif;
 use crate::rules::{Finding, Severity};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScanResult {
     pub findings: Vec<Finding>,
     pub scan_time_ms: u64,
@@ -15,12 +15,7 @@ pub struct ScanResult {
 
 impl ScanResult {
     pub fn new() -> Self {
-        Self {
-            findings: Vec::new(),
-            scan_time_ms: 0,
-            files_scanned: 0,
-            rules_applied: 0,
-        }
+        Self::default()
     }
 
     pub fn high_findings(&self) -> Vec<&Finding> {
@@ -38,7 +33,7 @@ impl ScanResult {
     }
 
     pub fn has_high_findings(&self) -> bool {
-        self.high_findings().len() > 0
+        !self.high_findings().is_empty()
     }
 
     pub fn summary(&self) -> String {
@@ -59,6 +54,6 @@ pub fn format_findings(findings: &[Finding], format: &str) -> String {
     match format {
         "sarif" => sarif::to_sarif(findings),
         "json" => json::to_json(findings),
-        "cli" | _ => cli::to_cli(findings),
+        _ => cli::to_cli(findings),
     }
 }

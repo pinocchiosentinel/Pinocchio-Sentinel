@@ -148,15 +148,12 @@ pub fn build_access_graph(
                     line_number: check.line_number,
                     is_before_use: check.is_before_use,
                 });
-                match &check.check_type {
-                    CheckType::IsWritable => {
-                        if account.access_type == AccessType::Read {
-                            account.access_type = AccessType::Write;
-                        } else {
-                            account.access_type = AccessType::Both;
-                        }
+                if matches!(&check.check_type, CheckType::IsWritable) {
+                    if account.access_type == AccessType::Read {
+                        account.access_type = AccessType::Write;
+                    } else {
+                        account.access_type = AccessType::Both;
                     }
-                    _ => {}
                 }
             }
         }

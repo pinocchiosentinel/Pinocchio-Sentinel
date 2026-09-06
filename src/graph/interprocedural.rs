@@ -6,11 +6,17 @@ pub struct InterproceduralAnalyzer {
     pub call_graph: CallGraph,
 }
 
-impl InterproceduralAnalyzer {
-    pub fn new() -> Self {
+impl Default for InterproceduralAnalyzer {
+    fn default() -> Self {
         Self {
             call_graph: CallGraph::new(),
         }
+    }
+}
+
+impl InterproceduralAnalyzer {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn analyze_cross_function_findings(&self, graph: &AccountAccessGraph) -> Vec<Finding> {
@@ -33,9 +39,10 @@ impl InterproceduralAnalyzer {
                         account_index: Some(account.index),
                         line_number: account.line_number,
                         handler: graph.handler_name.clone(),
-                        evidence: Some(format!(
+                        evidence: Some(
                             "CPI function requires return check, but no CpiReturn check found for this account"
-                        )),
+                                .to_string(),
+                        ),
                         fix_suggestion: None,
                     });
                 }

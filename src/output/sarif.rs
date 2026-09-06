@@ -107,7 +107,7 @@ pub fn to_sarif(findings: &[Finding]) -> String {
                     rules: get_sarif_rules(),
                 },
             },
-            results: findings.iter().map(|f| finding_to_sarif(f)).collect(),
+            results: findings.iter().map(finding_to_sarif).collect(),
         }],
     };
 

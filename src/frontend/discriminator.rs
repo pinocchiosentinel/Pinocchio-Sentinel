@@ -1,12 +1,18 @@
 use super::{DiscriminatorScheme, DiscriminatorValue};
 
 pub fn validate_discriminator(value: &DiscriminatorValue, scheme: &DiscriminatorScheme) -> bool {
-    match (value, scheme) {
-        (DiscriminatorValue::OneByte(_), DiscriminatorScheme::OneByte) => true,
-        (DiscriminatorValue::FourByteU32(_), DiscriminatorScheme::FourByteU32) => true,
-        (DiscriminatorValue::EightByte(_), DiscriminatorScheme::EightByte) => true,
-        _ => false,
-    }
+    matches!(
+        (value, scheme),
+        (DiscriminatorValue::OneByte(_), DiscriminatorScheme::OneByte)
+            | (
+                DiscriminatorValue::FourByteU32(_),
+                DiscriminatorScheme::FourByteU32
+            )
+            | (
+                DiscriminatorValue::EightByte(_),
+                DiscriminatorScheme::EightByte
+            )
+    )
 }
 
 pub fn format_discriminator(value: &DiscriminatorValue) -> String {

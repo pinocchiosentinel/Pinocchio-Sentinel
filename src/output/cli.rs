@@ -52,7 +52,7 @@ pub fn to_cli(findings: &[Finding]) -> String {
         output.push_str(&format!("   Handler: {}\n", finding.handler.dimmed()));
 
         if let Some(line) = finding.line_number {
-            output.push_str(&format!("   Line: {}\n", line.to_string()));
+            output.push_str(&format!("   Line: {line}\n"));
         }
 
         if let Some(ref evidence) = finding.evidence {
@@ -63,7 +63,7 @@ pub fn to_cli(findings: &[Finding]) -> String {
             output.push_str(&format!("   Fix: {}\n", fix.green()));
         }
 
-        output.push_str("\n");
+        output.push('\n');
     }
 
     output

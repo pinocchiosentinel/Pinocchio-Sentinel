@@ -173,7 +173,7 @@ fn extract_handlers(
         // For inline handlers, use the discriminator value as the handler name
         let effective_name =
             if handler_name == "unknown_handler" || handler_name == "Ok" || handler_name == "Err" {
-                format!("arm_{}", format!("{:?}", disc_value))
+                format!("arm_{:?}", disc_value)
             } else {
                 handler_name
             };
@@ -216,13 +216,12 @@ fn extract_discriminator_value(
         Pat::Tuple(tuple_pat) => {
             let mut bytes = [0u8; 8];
             for (i, elem) in tuple_pat.elems.iter().enumerate().take(8) {
-                match elem {
-                    Pat::Lit(lp) => match &lp.lit {
+                if let Pat::Lit(lp) = elem {
+                    match &lp.lit {
                         Lit::Byte(bl) => bytes[i] = bl.value(),
                         Lit::Int(il) => bytes[i] = il.base10_parse().unwrap_or(0),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
             match scheme {

@@ -1,6 +1,6 @@
 use super::{CheckInfo, CheckType};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CheckOrdering {
     pub checks: Vec<CheckInfo>,
     pub has_violation: bool,
@@ -8,10 +8,7 @@ pub struct CheckOrdering {
 
 impl CheckOrdering {
     pub fn new() -> Self {
-        Self {
-            checks: Vec::new(),
-            has_violation: false,
-        }
+        Self::default()
     }
 
     pub fn add_check(&mut self, check: CheckInfo) {

@@ -20,26 +20,26 @@ impl Rule for Ps010 {
         let mut findings = Vec::new();
 
         for account in &graph.accounts {
-            if account.access_type == AccessType::Write || account.access_type == AccessType::Both {
-                if !graph.has_check_before_use(account.index, &CheckType::IsWritable) {
-                    findings.push(Finding {
-                        rule_id: self.id().to_string(),
-                        severity: self.severity(),
-                        confidence: Confidence::Medium,
-                        message: format!(
-                            "Account '{}' (index {}) is mutated without is_writable() check",
-                            account.variable_name, account.index
-                        ),
-                        account_index: Some(account.index),
-                        line_number: account.line_number,
-                        handler: graph.handler_name.clone(),
+            if (account.access_type == AccessType::Write || account.access_type == AccessType::Both)
+                && !graph.has_check_before_use(account.index, &CheckType::IsWritable)
+            {
+                findings.push(Finding {
+                    rule_id: self.id().to_string(),
+                    severity: self.severity(),
+                    confidence: Confidence::Medium,
+                    message: format!(
+                        "Account '{}' (index {}) is mutated without is_writable() check",
+                        account.variable_name, account.index
+                    ),
+                    account_index: Some(account.index),
+                    line_number: account.line_number,
+                    handler: graph.handler_name.clone(),
                     evidence: None,
                     fix_suggestion: Some(format!(
                         "Add writable check: `if !{}.is_writable() {{ return Err(ProgramError::InvalidAccountData); }}`",
                         account.variable_name
                     )),
-                    });
-                }
+                });
             }
         }
 

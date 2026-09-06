@@ -47,10 +47,11 @@ impl Rule for Ps006 {
                         account_index: Some(a.index),
                         line_number: a.line_number,
                         handler: graph.handler_name.clone(),
-                    evidence: None,
-                    fix_suggestion: Some(format!(
-                        "Add uniqueness check: `if source.key() == dest.key() {{ return Err(ProgramError::InvalidArgument); }}`",
-                    )),
+                        evidence: None,
+                        fix_suggestion: Some(
+                            "Add uniqueness check: `if source.key() == dest.key() { return Err(ProgramError::InvalidArgument); }`"
+                                .to_string(),
+                        ),
                     });
                 }
             }

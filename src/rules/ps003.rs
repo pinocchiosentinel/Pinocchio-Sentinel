@@ -20,25 +20,26 @@ impl Rule for Ps003 {
         let mut findings = Vec::new();
 
         for account in &graph.accounts {
-            if account.access_type != crate::graph::AccessType::Read {
-                if !graph.has_check_before_use(account.index, &CheckType::Discriminant) {
-                    findings.push(Finding {
-                        rule_id: self.id().to_string(),
-                        severity: self.severity(),
-                        confidence: Confidence::Medium,
-                        message: format!(
-                            "Account '{}' (index {}) is cast without discriminant check",
-                            account.variable_name, account.index
-                        ),
-                        account_index: Some(account.index),
-                        line_number: account.line_number,
-                        handler: graph.handler_name.clone(),
+            if account.access_type != crate::graph::AccessType::Read
+                && !graph.has_check_before_use(account.index, &CheckType::Discriminant)
+            {
+                findings.push(Finding {
+                    rule_id: self.id().to_string(),
+                    severity: self.severity(),
+                    confidence: Confidence::Medium,
+                    message: format!(
+                        "Account '{}' (index {}) is cast without discriminant check",
+                        account.variable_name, account.index
+                    ),
+                    account_index: Some(account.index),
+                    line_number: account.line_number,
+                    handler: graph.handler_name.clone(),
                     evidence: None,
-                    fix_suggestion: Some(format!(
-                        "Add discriminant check: `if &data[0..8] != &EXPECTED_DISCRIMINATOR {{ return Err(ProgramError::InvalidAccountData); }}`",
-                    )),
-                    });
-                }
+                    fix_suggestion: Some(
+                        "Add discriminant check: `if &data[0..8] != &EXPECTED_DISCRIMINATOR { return Err(ProgramError::InvalidAccountData); }`"
+                            .to_string(),
+                    ),
+                });
             }
         }
 
