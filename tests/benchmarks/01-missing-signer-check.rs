@@ -6,6 +6,10 @@ use pinocchio::{account_info::AccountInfo, entrypoint, program_error::ProgramErr
 entrypoint!(process_instruction);
 
 pub fn process_instruction(
+// SENTINEL FIX: Add bounds check: `if data.len() < required_size { return Err(ProgramError::InvalidInstructionData); }`
+// SENTINEL FIX: Add init guard: `if account_data.initialized { return Err(ProgramError::AccountAlreadyInitialized); }`
+// SENTINEL FIX: Add bounds check: `if data.len() < MIN_SIZE { return Err(ProgramError::InvalidAccountData); }`
+// SENTINEL FIX: Add discriminant check: `if &data[0..8] != &EXPECTED_DISCRIMINATOR { return Err(ProgramError::InvalidAccountData); }`
     _program_id: &Pubkey,
     accounts: &[AccountInfo],
     data: &[u8],

@@ -1,5 +1,7 @@
 pub mod cli;
+pub mod html;
 pub mod json;
+pub mod markdown;
 pub mod sarif;
 
 use crate::rules::{Finding, Severity};
@@ -54,6 +56,8 @@ pub fn format_findings(findings: &[Finding], format: &str) -> String {
     match format {
         "sarif" => sarif::to_sarif(findings),
         "json" => json::to_json(findings),
+        "html" => html::to_html(findings),
+        "markdown" | "md" => markdown::to_markdown(findings),
         _ => cli::to_cli(findings),
     }
 }

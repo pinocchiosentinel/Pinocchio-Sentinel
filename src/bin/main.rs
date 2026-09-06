@@ -15,6 +15,8 @@ enum OutputFormat {
     Cli,
     Sarif,
     Json,
+    Html,
+    Markdown,
 }
 
 #[derive(Parser)]
@@ -257,6 +259,38 @@ fn main() -> anyhow::Result<()> {
                 }
             } else {
                 println!("{}", json_output);
+            }
+        }
+        OutputFormat::Html => {
+            let html_output = pinocchio_sentinel::output::html::to_html(&result.findings);
+            if let Some(ref path) = cli.output {
+                std::fs::write(path, html_output)?;
+                if cli.verbose {
+                    tracing::info!("HTML output written to {}", path.display());
+                }
+            } else {
+                // Default to report.html if no output path specified
+                let path = std::path::PathBuf::from("report.html");
+                std::fs::write(&path, html_output)?;
+                if cli.verbose {
+                    tracing::info!("HTML output written to {}", path.display());
+                }
+            }
+        }
+        OutputFormat::Markdown => {
+            let md_output = pinocchio_sentinel::output::markdown::to_markdown(&result.findings);
+            if let Some(ref path) = cli.output {
+                std::fs::write(path, md_output)?;
+                if cli.verbose {
+                    tracing::info!("Markdown output written to {}", path.display());
+                }
+            } else {
+                // Default to report.md if no output path specified
+                let path = std::path::PathBuf::from("report.md");
+                std::fs::write(&path, md_output)?;
+                if cli.verbose {
+                    tracing::info!("Markdown output written to {}", path.display());
+                }
             }
         }
         OutputFormat::Cli => {
@@ -503,6 +537,26 @@ fn run_audit(
                 println!("{}", json_output);
             }
         }
+        OutputFormat::Html => {
+            let html_output = pinocchio_sentinel::output::html::to_html(&result.findings);
+            if let Some(path) = output {
+                std::fs::write(path, html_output)?;
+            } else {
+                let path = std::path::PathBuf::from("report.html");
+                std::fs::write(&path, html_output)?;
+                println!("HTML report written to {}", path.display());
+            }
+        }
+        OutputFormat::Markdown => {
+            let md_output = pinocchio_sentinel::output::markdown::to_markdown(&result.findings);
+            if let Some(path) = output {
+                std::fs::write(path, md_output)?;
+            } else {
+                let path = std::path::PathBuf::from("report.md");
+                std::fs::write(&path, md_output)?;
+                println!("Markdown report written to {}", path.display());
+            }
+        }
         OutputFormat::Cli => {
             print_findings(&result.findings);
         }
@@ -515,33 +569,217 @@ fn run_audit(
 
 fn apply_fixes(findings: &[pinocchio_sentinel::rules::Finding], verbose: bool) {
     use std::collections::HashMap;
+    use std::fs;
 
+    // Group findings by source file
     let mut fixes_by_file: HashMap<String, Vec<&pinocchio_sentinel::rules::Finding>> =
         HashMap::new();
 
     for finding in findings {
         if finding.fix_suggestion.is_some() {
-            let file_key = format!("{}:{}", finding.handler, finding.line_number.unwrap_or(0));
+            // We need to find the actual source file path
+            // For now, we'll use the handler name to locate the file
+            let file_key = finding.handler.clone();
             fixes_by_file.entry(file_key).or_default().push(finding);
         }
     }
 
     let mut fixed_count = 0;
-    for (file_key, file_findings) in &fixes_by_file {
-        if verbose {
-            tracing::info!("Applying fixes for {}", file_key);
+    let mut files_modified = Vec::new();
+
+    for (handler, file_findings) in &fixes_by_file {
+        // Find the source file containing this handler
+        if let Some(source_path) = find_source_file_for_handler(handler) {
+            if let Ok(mut content) = fs::read_to_string(&source_path) {
+                let mut modified = false;
+
+                for finding in file_findings {
+                    if let Some(ref fix) = finding.fix_suggestion {
+                        if let Some(line_num) = finding.line_number {
+                            if verbose {
+                                println!(
+                                    "  {} {} at line {}: {}",
+                                    "FIX".cyan(),
+                                    finding.rule_id,
+                                    line_num,
+                                    fix
+                                );
+                            }
+
+                            // Parse the fix suggestion and apply it
+                            if apply_fix_to_content(&mut content, line_num, fix, &finding.rule_id) {
+                                modified = true;
+                                fixed_count += 1;
+                            }
+                        }
+                    }
+                }
+
+                if modified {
+                    if let Err(e) = fs::write(&source_path, &content) {
+                        eprintln!("Failed to write {}: {}", source_path.display(), e);
+                    } else {
+                        files_modified.push(source_path.display().to_string());
+                        if verbose {
+                            println!("  {} Modified {}", "OK".green(), source_path.display());
+                        }
+                    }
+                }
+            }
         }
-        fixed_count += file_findings.len();
     }
 
     if fixed_count > 0 {
         println!(
-            "\n{}: {} fix suggestions available",
-            "FIX".yellow().bold(),
-            fixed_count.to_string().yellow()
+            "\n{}: Applied {} fixes to {} files",
+            "FIX".green().bold(),
+            fixed_count.to_string().green(),
+            files_modified.len().to_string().green()
         );
-        println!("Note: Auto-fix is not yet implemented. Use the fix suggestions above to manually apply fixes.");
+        for file in &files_modified {
+            println!("  Modified: {}", file);
+        }
+    } else {
+        println!(
+            "\n{}: No fixes could be auto-applied",
+            "FIX".yellow().bold()
+        );
+        println!("Use the fix suggestions above to manually apply fixes.");
     }
+}
+
+fn find_source_file_for_handler(handler_name: &str) -> Option<std::path::PathBuf> {
+    // Search for the handler function in the current directory
+    let current_dir = std::env::current_dir().ok()?;
+    find_source_file_recursive(&current_dir, handler_name)
+}
+
+fn find_source_file_recursive(
+    dir: &std::path::Path,
+    handler_name: &str,
+) -> Option<std::path::PathBuf> {
+    use std::fs;
+
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if path
+                    .file_name()
+                    .is_some_and(|n| n == "target" || n == ".git")
+                {
+                    continue;
+                }
+                if let Some(found) = find_source_file_recursive(&path, handler_name) {
+                    return Some(found);
+                }
+            } else if path.extension().is_some_and(|e| e == "rs") {
+                if let Ok(content) = fs::read_to_string(&path) {
+                    if content.contains(&format!("fn {}", handler_name))
+                        || content.contains(&format!("pub fn {}", handler_name))
+                    {
+                        return Some(path);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn apply_fix_to_content(content: &mut String, line_num: u32, fix: &str, rule_id: &str) -> bool {
+    let lines: Vec<String> = content.lines().map(String::from).collect();
+    let mut new_lines = Vec::new();
+    let mut applied = false;
+
+    for (i, line) in lines.iter().enumerate() {
+        new_lines.push(line.clone());
+
+        // Apply fix after the line with the issue
+        if (i + 1) as u32 == line_num && !applied {
+            let indent = line
+                .chars()
+                .take_while(|c| c.is_whitespace())
+                .collect::<String>();
+
+            match rule_id {
+                "PS-001" => {
+                    // Missing signer check - add is_signer check
+                    let account_var = extract_account_variable(line);
+                    if !account_var.is_empty() {
+                        let fix_line = format!(
+                            "{}if !{}.is_signer() {{ return Err(ProgramError::MissingRequiredSignature); }}",
+                            indent, account_var
+                        );
+                        new_lines.push(fix_line);
+                        applied = true;
+                    }
+                }
+                "PS-002" => {
+                    // Missing owner check - add owned_by check
+                    let account_var = extract_account_variable(line);
+                    if !account_var.is_empty() {
+                        let fix_line = format!(
+                            "{}if !{}.owned_by(&crate::ID) {{ return Err(ProgramError::IncorrectProgramId); }}",
+                            indent, account_var
+                        );
+                        new_lines.push(fix_line);
+                        applied = true;
+                    }
+                }
+                "PS-010" => {
+                    // Missing writable check - add is_writable check
+                    let account_var = extract_account_variable(line);
+                    if !account_var.is_empty() {
+                        let fix_line = format!(
+                            "{}if !{}.is_writable() {{ return Err(ProgramError::InvalidAccountData); }}",
+                            indent, account_var
+                        );
+                        new_lines.push(fix_line);
+                        applied = true;
+                    }
+                }
+                _ => {
+                    // For other rules, just add a comment
+                    let fix_comment = format!("// SENTINEL FIX: {}", fix);
+                    new_lines.push(format!("{}{}", indent, fix_comment));
+                    applied = true;
+                }
+            }
+        }
+    }
+
+    if applied {
+        *content = new_lines.join("\n");
+    }
+
+    applied
+}
+
+fn extract_account_variable(line: &str) -> String {
+    // Extract account variable name from line like "let vault = accounts.get(0)..."
+    // or "let user = &accounts[0]..."
+    let trimmed = line.trim();
+
+    // Pattern: let <var> = <expr>
+    if let Some(eq_pos) = trimmed.find('=') {
+        let lhs = trimmed[..eq_pos].trim();
+        if let Some(space_pos) = lhs.find(' ') {
+            let var_name = lhs[space_pos + 1..].trim();
+            // Check if RHS contains accounts
+            let rhs = trimmed[eq_pos + 1..].trim();
+            if rhs.contains("accounts") {
+                return var_name.to_string();
+            }
+        }
+    }
+
+    // Pattern: accounts[n] or accounts.get(n) used directly
+    if trimmed.contains("accounts[") || trimmed.contains("accounts.get(") {
+        return "accounts".to_string();
+    }
+
+    String::new()
 }
 
 fn show_rules(rule_id: Option<&str>) {
