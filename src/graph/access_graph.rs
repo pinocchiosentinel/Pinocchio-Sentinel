@@ -32,6 +32,7 @@ pub enum CheckType {
     IsWritable,
     DataLen,
     Discriminant,
+    PdaBump,
     Custom(String),
 }
 
