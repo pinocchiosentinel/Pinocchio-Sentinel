@@ -41,6 +41,10 @@ impl Rule for Ps009 {
                         line_number: account.line_number,
                         handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Zero both lamports and data: `**{}.try_borrow_mut_lamports()? = 0;` and zero data",
+                        account.variable_name
+                    )),
                     });
                 }
             }

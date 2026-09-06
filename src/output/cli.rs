@@ -40,6 +40,10 @@ pub fn to_cli(findings: &[Finding]) -> String {
             output.push_str(&format!("   Evidence: {}\n", evidence.dimmed()));
         }
         
+        if let Some(ref fix) = finding.fix_suggestion {
+            output.push_str(&format!("   Fix: {}\n", fix.green()));
+        }
+        
         output.push_str("\n");
     }
     
@@ -90,6 +94,7 @@ mod tests {
             account_index: Some(0),
             line_number: Some(10),
             evidence: None,
+            fix_suggestion: None,
         }];
         
         let output = to_cli(&findings);

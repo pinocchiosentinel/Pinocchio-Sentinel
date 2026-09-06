@@ -47,6 +47,9 @@ impl Rule for Ps011 {
                     line_number: account.line_number,
                     handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Add account count check: `if accounts.is_empty() {{ return Err(ProgramError::NotEnoughAccountKeys); }}`",
+                    )),
                 });
             }
         }

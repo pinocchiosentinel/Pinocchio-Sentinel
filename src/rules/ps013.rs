@@ -43,6 +43,9 @@ impl Rule for Ps013 {
                         line_number: account.line_number,
                         handler: graph.handler_name.clone(),
                         evidence: None,
+                        fix_suggestion: Some(format!(
+                            "Check CPI return: `invoke(...)?;` instead of `let _ = invoke(...);`",
+                        )),
                     });
                 }
             }

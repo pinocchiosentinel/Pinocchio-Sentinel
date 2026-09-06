@@ -53,6 +53,7 @@ mod tests {
             account_index: Some(0),
             line_number: Some(10),
             evidence: None,
+            fix_suggestion: None,
         }];
         
         let json = to_json(&findings);

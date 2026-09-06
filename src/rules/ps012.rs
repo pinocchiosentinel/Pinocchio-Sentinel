@@ -40,6 +40,9 @@ impl Rule for Ps012 {
                         line_number: account.line_number,
                         handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Add bounds check: `if data.len() < required_size {{ return Err(ProgramError::InvalidInstructionData); }}`",
+                    )),
                     });
                 }
             }

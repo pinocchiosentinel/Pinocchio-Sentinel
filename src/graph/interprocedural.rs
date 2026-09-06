@@ -36,6 +36,7 @@ impl InterproceduralAnalyzer {
                         evidence: Some(format!(
                             "CPI function requires return check, but no CpiReturn check found for this account"
                         )),
+                        fix_suggestion: None,
                     });
                 }
             }
@@ -85,6 +86,7 @@ impl InterproceduralAnalyzer {
                             line_number: account.line_number,
                             handler: graph.handler_name.clone(),
                             evidence: None,
+                            fix_suggestion: None,
                         });
                     }
                     if fn_info.requires_owner.contains(&account.index) {
@@ -100,6 +102,7 @@ impl InterproceduralAnalyzer {
                             line_number: account.line_number,
                             handler: graph.handler_name.clone(),
                             evidence: None,
+                            fix_suggestion: None,
                         });
                     }
                 }

@@ -41,6 +41,9 @@ impl Rule for Ps005 {
                     line_number: account.line_number,
                     handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Verify canonical bump: `assert_eq!(bump, canonical_bump)` after find_program_address",
+                    )),
                 });
             }
         }

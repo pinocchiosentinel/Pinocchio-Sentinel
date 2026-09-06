@@ -34,6 +34,9 @@ impl Rule for Ps003 {
                         line_number: account.line_number,
                         handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Add discriminant check: `if &data[0..8] != &EXPECTED_DISCRIMINATOR {{ return Err(ProgramError::InvalidAccountData); }}`",
+                    )),
                     });
                 }
             }

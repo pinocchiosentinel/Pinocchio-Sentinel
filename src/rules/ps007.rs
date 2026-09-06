@@ -42,6 +42,10 @@ impl Rule for Ps007 {
                         line_number: account.line_number,
                         handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Add program ID check: `if {}.key() != &EXPECTED_PROGRAM_ID {{ return Err(ProgramError::IncorrectProgramId); }}`",
+                        account.variable_name
+                    )),
                     });
                 }
             }

@@ -47,6 +47,9 @@ impl Rule for Ps006 {
                         line_number: a.line_number,
                         handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Add uniqueness check: `if source.key() == dest.key() {{ return Err(ProgramError::InvalidArgument); }}`",
+                    )),
                     });
                 }
             }

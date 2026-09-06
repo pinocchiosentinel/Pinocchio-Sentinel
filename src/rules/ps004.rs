@@ -34,6 +34,9 @@ impl Rule for Ps004 {
                         line_number: account.line_number,
                         handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Add bounds check: `if data.len() < MIN_SIZE {{ return Err(ProgramError::InvalidAccountData); }}`",
+                    )),
                     });
                 }
             }

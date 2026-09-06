@@ -26,6 +26,8 @@ pub struct Finding {
     pub account_index: Option<usize>,
     pub line_number: Option<u32>,
     pub evidence: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fix_suggestion: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

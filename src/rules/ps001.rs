@@ -33,6 +33,10 @@ impl Rule for Ps001 {
                     line_number: account.line_number,
                     handler: graph.handler_name.clone(),
                     evidence: None,
+                    fix_suggestion: Some(format!(
+                        "Add `if !{}.is_signer() {{ return Err(ProgramError::MissingRequiredSignature); }}` before use",
+                        account.variable_name
+                    )),
                 });
             }
         }
