@@ -117,6 +117,7 @@ pub fn build_access_graph(
     // Collect checks from either the named function or the inline handler body
     let mut collector = CheckCollector {
         checks: Vec::new(),
+        uses: Vec::new(),
         line_number_start: 0,
         variable_aliases: std::collections::HashMap::new(),
     };
@@ -159,6 +160,20 @@ pub fn build_access_graph(
         }
     }
 
+    // Add accounts from uses (even if no checks found)
+    for use_info in &collector.uses {
+        let idx = use_info.account_index;
+        if graph.get_account(idx).is_none() {
+            graph.add_account(AccountAccess {
+                index: idx,
+                variable_name: format!("accounts[{}]", idx),
+                access_type: AccessType::Read,
+                checks: Vec::new(),
+                line_number: Some(use_info.line_number),
+            });
+        }
+    }
+
     // Set line numbers from first use
     for idx in &account_indices {
         if let Some(account) = graph.get_account_mut(*idx) {
@@ -189,8 +204,14 @@ struct CollectedCheck {
     is_before_use: bool,
 }
 
+struct CollectedUse {
+    account_index: usize,
+    line_number: u32,
+}
+
 struct CheckCollector {
     checks: Vec<CollectedCheck>,
+    uses: Vec<CollectedUse>,
     line_number_start: u32,
     variable_aliases: std::collections::HashMap<String, usize>,
 }
@@ -208,6 +229,11 @@ fn collect_checks_from_block(block: &syn::Block, collector: &mut CheckCollector)
                         let var_name = pat_ident.ident.to_string();
                         if let Some(account_idx) = try_extract_account_index_from_expr(&init.expr) {
                             collector.variable_aliases.insert(var_name, account_idx);
+                            // Also record the use
+                            collector.uses.push(CollectedUse {
+                                account_index: account_idx,
+                                line_number: line_of_span(local.span()),
+                            });
                         }
                     }
                     collect_checks_from_expr(&init.expr, collector);
@@ -223,6 +249,13 @@ fn collect_checks_from_expr(expr: &Expr, collector: &mut CheckCollector) {
         Expr::MethodCall(method_call) => {
             let line = line_of_span(method_call.span());
             analyze_method_call(method_call, line, collector);
+            // Record account use if this is accounts.get(n)
+            if let Some(idx) = try_extract_account_index_from_expr(&method_call.receiver) {
+                collector.uses.push(CollectedUse {
+                    account_index: idx,
+                    line_number: line,
+                });
+            }
             // Also recurse into receiver and args
             collect_checks_from_expr(&method_call.receiver, collector);
             for arg in &method_call.args {
@@ -269,6 +302,14 @@ fn collect_checks_from_expr(expr: &Expr, collector: &mut CheckCollector) {
             }
         }
         Expr::Index(index_expr) => {
+            // Record account use if this is accounts[n]
+            if let Some(idx) = try_extract_account_index_from_expr(&Expr::Index(index_expr.clone()))
+            {
+                collector.uses.push(CollectedUse {
+                    account_index: idx,
+                    line_number: line_of_span(index_expr.span()),
+                });
+            }
             collect_checks_from_expr(&index_expr.expr, collector);
             collect_checks_from_expr(&index_expr.index, collector);
         }
@@ -424,6 +465,29 @@ fn try_extract_account_index_from_expr(expr: &Expr) -> Option<usize> {
             }
             None
         }
+        Expr::MethodCall(method_call) => {
+            // Handle accounts.get(n)
+            if method_call.method == "get" && method_call.args.len() == 1 {
+                if let Expr::Path(path) = &*method_call.receiver {
+                    if path
+                        .path
+                        .segments
+                        .last()
+                        .map(|s| s.ident == "accounts")
+                        .unwrap_or(false)
+                    {
+                        if let Expr::Lit(lit) = &method_call.args[0] {
+                            if let Lit::Int(int_lit) = &lit.lit {
+                                return int_lit.base10_parse::<usize>().ok();
+                            }
+                        }
+                    }
+                }
+            }
+            // Try on the full expression (e.g., accounts.get(0).ok_or(...)?)
+            try_extract_account_index_from_expr(&method_call.receiver)
+        }
+        Expr::Try(try_expr) => try_extract_account_index_from_expr(&try_expr.expr),
         Expr::Reference(ref_expr) => try_extract_account_index_from_expr(&ref_expr.expr),
         Expr::Paren(paren) => try_extract_account_index_from_expr(&paren.expr),
         _ => None,
