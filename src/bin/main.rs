@@ -6,7 +6,7 @@ use pinocchio_sentinel::{
     SentinelConfig, parse_program, build_access_graph, run_all_rules,
     format_findings, print_findings, print_summary, ScanResult,
 };
-use pinocchio_sentinel::rules;
+use pinocchio_sentinel::rules::{self, Severity};
 use pinocchio_sentinel::graph::{CallGraph, InterproceduralAnalyzer};
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -21,7 +21,7 @@ enum OutputFormat {
 #[command(about = "Static analysis for Solana programs written without Anchor")]
 #[command(version = "0.1.0")]
 struct Cli {
-    /// Path to the Cargo workspace or program directory
+    /// Path to the Cargo workspace, program directory, or single .rs file
     #[arg(short, long, default_value = ".")]
     path: PathBuf,
 
@@ -52,6 +52,14 @@ struct Cli {
     /// Fail on HIGH severity findings (for CI)
     #[arg(long)]
     fail_on_high: bool,
+
+    /// Minimum severity to report (high, medium, warn, low, info)
+    #[arg(long)]
+    min_severity: Option<String>,
+
+    /// Rule IDs to suppress (comma-separated, e.g., PS-001,PS-002)
+    #[arg(long)]
+    allow: Option<String>,
 
     /// Include skeleton tests in output
     #[arg(long)]
@@ -121,6 +129,10 @@ fn main() -> anyhow::Result<()> {
         std::process::exit(1);
     }
 
+    if cli.verbose {
+        tracing::info!("Found {} source files to scan", source_files.len());
+    }
+
     let mut all_findings = Vec::new();
     let mut files_scanned = 0;
 
@@ -170,6 +182,17 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+    }
+
+    // Apply filters
+    if let Some(ref min_severity) = cli.min_severity {
+        let min = parse_severity(min_severity);
+        all_findings.retain(|f| severity_rank(&f.severity) >= severity_rank(&min));
+    }
+
+    if let Some(ref allow_list) = cli.allow {
+        let allowed: Vec<&str> = allow_list.split(',').map(|s| s.trim()).collect();
+        all_findings.retain(|f| !allowed.contains(&f.rule_id.as_str()));
     }
 
     let scan_time = start.elapsed().as_millis() as u64;
@@ -252,19 +275,23 @@ fn find_source_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
         return Ok(files);
     }
 
+    // Try Cargo workspace first
     if let Some(cargo_toml) = find_cargo_toml(path) {
         if let Some(workspace_members) = parse_workspace_members(&cargo_toml) {
             let cargo_dir = cargo_toml.parent().unwrap_or(path);
             for member in workspace_members {
                 let member_path = cargo_dir.join(&member);
                 if member_path.exists() {
-                    collect_rs_files(&member_path, &mut files)?;
+                    collect_rs_files_from_crate(&member_path, &mut files)?;
                 }
             }
-            return Ok(files);
+            if !files.is_empty() {
+                return Ok(files);
+            }
         }
     }
 
+    // Fall back to directory scan
     collect_rs_files(path, &mut files)?;
     Ok(files)
 }
@@ -305,7 +332,7 @@ fn collect_rs_files(path: &PathBuf, files: &mut Vec<PathBuf>) -> anyhow::Result<
             if let Some(ext) = path.extension() {
                 if ext == "rs" {
                     let path_str = path.to_string_lossy();
-                    if !path_str.contains("target") && !path_str.contains("tests") {
+                    if !path_str.contains("target") {
                         files.push(path.to_path_buf());
                     }
                 }
@@ -313,6 +340,35 @@ fn collect_rs_files(path: &PathBuf, files: &mut Vec<PathBuf>) -> anyhow::Result<
         }
     }
     Ok(())
+}
+
+fn collect_rs_files_from_crate(path: &PathBuf, files: &mut Vec<PathBuf>) -> anyhow::Result<()> {
+    let src_dir = path.join("src");
+    if src_dir.exists() {
+        collect_rs_files(&src_dir, files)?;
+    }
+    Ok(())
+}
+
+fn parse_severity(s: &str) -> Severity {
+    match s.to_lowercase().as_str() {
+        "high" => Severity::HIGH,
+        "medium" => Severity::MEDIUM,
+        "warn" | "warning" => Severity::WARN,
+        "low" => Severity::LOW,
+        "info" => Severity::INFO,
+        _ => Severity::INFO,
+    }
+}
+
+fn severity_rank(s: &Severity) -> u8 {
+    match s {
+        Severity::HIGH => 4,
+        Severity::MEDIUM => 3,
+        Severity::WARN => 2,
+        Severity::LOW => 1,
+        Severity::INFO => 0,
+    }
 }
 
 fn show_rules(rule_id: Option<&str>) {
