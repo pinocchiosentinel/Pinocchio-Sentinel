@@ -1,0 +1,577 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "pinocchio-sentinel",
+          "version": "0.1.0",
+          "information_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/README.md",
+          "rules": [
+            {
+              "id": "PS-001",
+              "name": "MissingSignerCheck",
+              "short_description": {
+                "text": "Authority account used without is_signer() assertion"
+              },
+              "full_description": {
+                "text": "Account is used without verifying signer status before use"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-001.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-002",
+              "name": "MissingOwnerCheck",
+              "short_description": {
+                "text": "Account data read without owned_by() assertion"
+              },
+              "full_description": {
+                "text": "Account data is read without verifying program ownership"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-002.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-003",
+              "name": "MissingDiscriminantCheck",
+              "short_description": {
+                "text": "Account cast without discriminant check"
+              },
+              "full_description": {
+                "text": "Account data is interpreted without verifying the discriminant bytes"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-003.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-004",
+              "name": "MissingBoundsCheck",
+              "short_description": {
+                "text": "Zero-copy cast without data_len() bounds assertion"
+              },
+              "full_description": {
+                "text": "Account data is accessed by index without checking data length"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-004.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-005",
+              "name": "PdaBumpNotCanonical",
+              "short_description": {
+                "text": "PDA used without canonical bump verification"
+              },
+              "full_description": {
+                "text": "Program Derived Address is used without verifying the canonical bump seed"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-005.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-006",
+              "name": "AccountAliasing",
+              "short_description": {
+                "text": "Two account indices may alias, both mutated"
+              },
+              "full_description": {
+                "text": "Two mutable account references may point to the same account"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-006.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-007",
+              "name": "ArbitraryCpi",
+              "short_description": {
+                "text": "CPI target program ID not compared against constant"
+              },
+              "full_description": {
+                "text": "Cross-program invocation target is not verified against a known program ID"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-007.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "high"
+              }
+            },
+            {
+              "id": "PS-008",
+              "name": "AccountReinitialization",
+              "short_description": {
+                "text": "Initialization path reachable on already-initialized account"
+              },
+              "full_description": {
+                "text": "Account can be re-initialized because no guard prevents writing init data to an existing account"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-008.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "high"
+              }
+            },
+            {
+              "id": "PS-009",
+              "name": "LamportZeroingMissing",
+              "short_description": {
+                "text": "Lamport reduction without data zeroing"
+              },
+              "full_description": {
+                "text": "Account lamports are reduced without zeroing data, allowing ghost account attacks"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-009.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "high"
+              }
+            },
+            {
+              "id": "PS-010",
+              "name": "MissingWritableCheck",
+              "short_description": {
+                "text": "Account mutated without is_writable() assertion"
+              },
+              "full_description": {
+                "text": "Account is mutated without verifying it was marked as writable"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-010.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-011",
+              "name": "MissingAccountCountGate",
+              "short_description": {
+                "text": "lazy_program_entrypoint! invoked without account-count gate"
+              },
+              "full_description": {
+                "text": "Account slice is indexed without verifying accounts.len() first"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-011.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "high"
+              }
+            },
+            {
+              "id": "PS-012",
+              "name": "SliceIndexWithoutBounds",
+              "short_description": {
+                "text": "Slice index accessed without length assertion"
+              },
+              "full_description": {
+                "text": "Instruction data or account data is indexed without checking the slice length"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-012.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "medium"
+              }
+            },
+            {
+              "id": "PS-013",
+              "name": "UncheckedCpiReturn",
+              "short_description": {
+                "text": "CPI return value not checked"
+              },
+              "full_description": {
+                "text": "Cross-program invocation return value is not verified for errors"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-013.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "high"
+              }
+            },
+            {
+              "id": "PS-014",
+              "name": "SysvarWithoutPubkeyCheck",
+              "short_description": {
+                "text": "Sysvar account used without pubkey comparison"
+              },
+              "full_description": {
+                "text": "Sysvar account is used without verifying its pubkey matches the known sysvar address"
+              },
+              "default_configuration": {
+                "level": "error"
+              },
+              "help_uri": "https://github.com/pinocchio-sentinel/pinocchio-sentinel/blob/main/docs/rules/PS-014.md",
+              "properties": {
+                "tags": [
+                  "security",
+                  "security"
+                ],
+                "precision": "high"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "rule_id": "PS-001",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is used without is_signer() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 19
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-002",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 19
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-001",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is used without is_signer() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-002",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-001",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is used without is_signer() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 35
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-002",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 35
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-001",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is used without is_signer() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-002",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-002",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 53
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-001",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is used without is_signer() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 63
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-001",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is used without is_signer() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 73
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        },
+        {
+          "rule_id": "PS-002",
+          "level": "error",
+          "message": {
+            "text": "Account 'accounts[0]' (index 0) is read without owned_by() check"
+          },
+          "locations": [
+            {
+              "physical_location": {
+                "artifact_location": {
+                  "uri": "unknown"
+                },
+                "region": {
+                  "start_line": 73
+                }
+              }
+            }
+          ],
+          "properties": {
+            "confidence": "medium"
+          }
+        }
+      ]
+    }
+  ]
+}
